@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run text-stats tests
+        working-directory: text-stats
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Verify text-stats runs standalone
+        working-directory: text-stats
+        run: |
+          python3 scripts/text_stats.py README.md
+          python3 scripts/text_stats.py README.md --json
+          echo "one. two." | python3 scripts/text_stats.py
+
+      - name: Every skill has a SKILL.md with name and description
+        run: |
+          status=0
+          for dir in */; do
+            case "$dir" in .github/|docs/) continue ;; esac
+            skill="${dir}SKILL.md"
+            if [ ! -f "$skill" ]; then
+              echo "::error::$dir has no SKILL.md"
+              status=1
+              continue
+            fi
+            grep -q '^name:' "$skill" || { echo "::error::$skill is missing 'name:'"; status=1; }
+            grep -q '^description:' "$skill" || { echo "::error::$skill is missing 'description:'"; status=1; }
+          done
+          exit $status
