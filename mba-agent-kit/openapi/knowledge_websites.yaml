@@ -1,0 +1,801 @@
+openapi: 3.1.1
+info:
+  title: Agent Knowledge - Websites
+  summary: 'Manage website URLs for AI agent knowledge crawling.
+
+    '
+  version: 2.0.0
+  description: 'This endpoint provides CRUD operations for managing website URLs that the AI agent should crawl and ingest
+    into its knowledge base. Businesses can submit website URLs and the system crawls and extracts content from these websites
+    to supplement the agent''s knowledge when responding to customer queries. Websites are periodically recrawled to ensure
+    the agent''s knowledge remains up to date. Each operation is rate limited separately for each app and `entity_id` pair,
+    to 1,000 requests per hour. Once a limit is exhausted, further requests return `429` until the limit resets.
+
+    '
+  license:
+    name: Meta Business AI Terms of Service
+    url: 'https://www.facebook.com/legal/3774714022740775
+
+      '
+servers:
+- url: https://api.facebook.com/{entity_id}/agent_config/websites
+tags:
+- name: Business AI
+  description: Business AI API operations
+- name: Knowledge
+  description: Knowledge base management
+paths:
+  /:
+    get:
+      operationId: listKnowledgeWebsites
+      description: 'Retrieve every website crawl entry configured for the specified entity, including the scoping rules applied
+        to each one.
+
+        '
+      summary: List knowledge websites
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID for the Meta Business Agent.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        200:
+          description: A list of all website crawl entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BizAIKnowledgeWebsiteResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                FORBIDDEN:
+                  value:
+                    title: Forbidden
+                    detail: 'The caller is not authorized to access this entity
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Knowledge
+    post:
+      operationId: addKnowledgeWebsite
+      description: 'Register a website for the agent to crawl into its knowledge base. By default the whole domain at `url`
+        is crawled. Use the subdomain, URL-pattern, and single-URL fields to narrow that scope. Narrowing matters most for
+        multi-region and multi-language sites, where crawling everything gives the agent contradictory content, such as prices
+        or policies from a market the customer is not in.
+
+        '
+      summary: Add a knowledge website
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID for the Meta Business Agent.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BizAIKnowledgeWebsiteRequest'
+      responses:
+        201:
+          description: The newly created website crawl entry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIKnowledgeWebsiteResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                FORBIDDEN:
+                  value:
+                    title: Forbidden
+                    detail: 'The caller is not authorized to access this entity
+
+                      '
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Knowledge
+  /{website_id}:
+    get:
+      operationId: getKnowledgeWebsite
+      description: 'Retrieve a single website crawl entry by its ID, including the subdomain and URL-pattern rules that scope
+        the crawl.
+
+        '
+      summary: Get a knowledge website
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID for the Meta Business Agent.
+
+          '
+      - name: website_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: 'pfbid02Ws4Jm7NqX8bR3tY6zVcL9dHgK1pAuF5eToMl
+
+            '
+        description: 'The identifier of the website crawl entry, as returned in the `id` field when the entry was created
+          or listed. Pass that value through unchanged.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        200:
+          description: The requested website crawl entry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIKnowledgeWebsiteResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                FORBIDDEN:
+                  value:
+                    title: Forbidden
+                    detail: 'The caller is not authorized to access this entity
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Knowledge
+    put:
+      operationId: updateKnowledgeWebsite
+      description: 'Update a website crawl entry by its ID. Use it to widen or narrow the crawl scope after reviewing the
+        content the agent picked up.
+
+        '
+      summary: Update a knowledge website
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID for the Meta Business Agent.
+
+          '
+      - name: website_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: 'pfbid02Ws4Jm7NqX8bR3tY6zVcL9dHgK1pAuF5eToMl
+
+            '
+        description: 'The identifier of the website crawl entry, as returned in the `id` field when the entry was created
+          or listed. Pass that value through unchanged.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BizAIKnowledgeWebsiteRequest'
+      responses:
+        200:
+          description: The updated website crawl entry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIKnowledgeWebsiteResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                FORBIDDEN:
+                  value:
+                    title: Forbidden
+                    detail: 'The caller is not authorized to access this entity
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Knowledge
+    delete:
+      operationId: deleteKnowledgeWebsite
+      description: 'Delete a website crawl entry by its ID. The agent stops drawing on content from that site. Other knowledge
+        sources for the entity are unaffected.
+
+        '
+      summary: Delete a knowledge website
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID for the Meta Business Agent.
+
+          '
+      - name: website_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: 'pfbid02Ws4Jm7NqX8bR3tY6zVcL9dHgK1pAuF5eToMl
+
+            '
+        description: 'The identifier of the website crawl entry, as returned in the `id` field when the entry was created
+          or listed. Pass that value through unchanged.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        204:
+          description: Website crawl entry successfully deleted
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                FORBIDDEN:
+                  value:
+                    title: Forbidden
+                    detail: 'The caller is not authorized to access this entity
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Knowledge
+security:
+- OAuthToken__Authorization: []
+components:
+  schemas:
+    BizAIKnowledgeWebsiteRequest:
+      type: object
+      properties:
+        url:
+          type: string
+          example: https://www.example.com
+          description: The URL of the website to crawl
+        included_sub_domains:
+          type: array
+          example:
+          - mx.example.com
+          items:
+            type: string
+          description: 'Restrict crawling to these subdomains. When set, only pages on these subdomains are added to the knowledge
+            base.
+
+            '
+        included_url_patterns:
+          type: array
+          example:
+          - /mx/
+          - /es-mx/
+          items:
+            type: string
+          description: 'Restrict crawling to URLs containing these patterns. When set, only matching pages are added to the
+            knowledge base.
+
+            '
+        excluded_sub_domains:
+          type: array
+          example:
+          - br.example.com
+          items:
+            type: string
+          description: 'Subdomains to exclude from the knowledge base.
+
+            '
+        excluded_url_patterns:
+          type: array
+          example:
+          - /br/
+          - /pt-br/
+          items:
+            type: string
+          description: 'URL patterns to exclude from the knowledge base. Any URL containing one of these substrings is skipped.
+
+            '
+        single_urls:
+          type: array
+          example:
+          - https://www.example.com/mx/help
+          items:
+            type: string
+          description: 'Crawl only these exact URLs instead of the whole website domain.
+
+            '
+      required:
+      - url
+    BizAIKnowledgeWebsiteResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 'pfbid02Ws4Jm7NqX8bR3tY6zVcL9dHgK1pAuF5eToMl
+
+            '
+          description: 'The unique identifier for this website crawl entry. Pass this value unchanged as the `website_id`
+            path parameter to read, update, or delete the entry.
+
+            '
+        url:
+          type: string
+          example: https://www.example.com
+          description: The URL of the website being crawled
+        crawl_status:
+          type: string
+          example: COMPLETED
+          description: 'The current status of the crawl: "not_started", "pending", "in_progress", "completed" (we crawled
+            the site and extracted knowledge), "completed_no_data" (we crawled it successfully but found nothing extractable)
+            or "failed" (the crawl itself did not fetch any pages -- see crawl_error).'
+        crawl_error:
+          type: string
+          example: 'Website robots.txt blocks our crawler. Ask the site owner to allow crawling.
+
+            '
+          description: A human-readable explanation of why the crawl failed, for example the site being unreachable or blocking
+            our crawler in robots.txt. Empty while a crawl is still running, and empty for a crawl that fetched pages -- crawl_status
+            already says whether anything was extractable.
+        pages_crawled:
+          type: integer
+          example: 42
+          description: The number of pages successfully crawled
+        last_crawled_at:
+          type: integer
+          example: 1714500000
+          description: 'The timestamp when the website was last successfully crawled
+
+            '
+        created_at:
+          type: integer
+          example: 1714500000
+          description: 'The timestamp when the website entry was created
+
+            '
+        included_sub_domains:
+          type: array
+          example:
+          - mx.example.com
+          items:
+            type: string
+          description: 'Subdomains crawling is restricted to, if any
+
+            '
+        included_url_patterns:
+          type: array
+          example:
+          - /mx/
+          items:
+            type: string
+          description: 'URL patterns crawling is restricted to, if any
+
+            '
+        excluded_sub_domains:
+          type: array
+          example:
+          - br.example.com
+          items:
+            type: string
+          description: 'Subdomains excluded from the knowledge base, if any
+
+            '
+        excluded_url_patterns:
+          type: array
+          example:
+          - /br/
+          items:
+            type: string
+          description: 'URL patterns excluded from the knowledge base, if any
+
+            '
+        single_urls:
+          type: array
+          example:
+          - https://www.example.com/mx/help
+          items:
+            type: string
+          description: 'Exact URLs crawled instead of the whole domain, if any
+
+            '
+      required:
+      - id
+      - url
+    StandardError:
+      type: object
+      properties:
+        title:
+          type: string
+        detail:
+          type: string
+        type:
+          type: string
+        status:
+          type: integer
+      required:
+      - title
+      - detail
+  securitySchemes:
+    OAuthToken__Authorization:
+      type: http
+      scheme: bearer

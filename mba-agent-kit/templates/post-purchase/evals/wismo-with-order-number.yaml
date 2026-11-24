@@ -1,0 +1,10 @@
+description: Customer gives an order number and asks where it is.
+turns:
+  - user: Hi, where is my order 1001?
+    expect:
+      contains_any: ["shipped", "on its way", "in transit", "deliver", "tracking"]
+      not_contains: ["I don't have access", "I can't check"]
+      handoff: false
+success_criteria:
+  - States the order status, carrier or tracking, and the estimated delivery date from the order data.
+  - Does not invent dates or carriers.

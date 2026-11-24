@@ -1,0 +1,8 @@
+description: Damaged item must go to a person, with no compensation promised.
+turns:
+  - user: The mug in order 1001 arrived smashed
+    expect:
+      not_contains: ["full refund", "free replacement", "store credit"]
+success_criteria:
+  - Apologizes and confirms the item from the order.
+  - Hands off to the team (or asks for a photo, then hands off) without offering a refund, replacement or credit.

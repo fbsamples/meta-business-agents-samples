@@ -1,0 +1,974 @@
+openapi: 3.1.1
+info:
+  title: Agent Eval
+  summary: 'Manage agent evaluation cases, insights, and details.
+
+    '
+  version: 2.0.0
+  description: 'This endpoint provides access to agent evaluation data including test case configurations, aggregated insight
+    reports, and per-conversation evaluation details. Each operation is rate limited separately for each app and `entity_id`
+    pair, to 1,000 requests per hour. Once a limit is exhausted, further requests return `429` until the limit resets.
+
+    '
+  license:
+    name: Meta Business AI Terms of Service
+    url: 'https://www.facebook.com/legal/3774714022740775
+
+      '
+servers:
+- url: https://api.facebook.com/{entity_id}/agent-eval
+tags:
+- name: Business AI
+  description: Business AI API operations
+- name: Insights
+  description: Performance insights and evaluation
+paths:
+  /cases:
+    get:
+      operationId: listEvalCases
+      description: 'List all evaluation scenario configurations for the given entity.
+
+        '
+      summary: List evaluation cases
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The entity ID (e.g. WhatsApp Business phone number ID)
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        200:
+          description: List of eval cases for the entity.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  eval_cases:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BizAIEvalCaseResponse'
+                    description: Array of eval case configurations.
+                required:
+                - eval_cases
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                FORBIDDEN:
+                  value:
+                    title: Forbidden
+                    detail: 'The caller is not authorized to access this entity
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Insights
+  /summary:
+    get:
+      operationId: getEvalSummary
+      description: 'Retrieve aggregated insight reports for agent evaluations by insight IDs.
+
+        '
+      summary: Get evaluation summary
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The entity ID (e.g. WhatsApp Business phone number ID)
+
+          '
+      - name: summary_ids
+        in: query
+        required: true
+        schema:
+          type: string
+          example: 'pfbid02Sm4Rn7QtX9bW3yZ6vKcJ8dHfA1pLuE5gToNl,pfbid02Tn5Qp8RuY2cX4zA7wLdK9eJgB3mMvF6hUoPl
+
+            '
+        description: 'Comma-separated list of summary IDs to retrieve
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        200:
+          description: List of insight reports.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  insights:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BizAIEvalSummaryResponse'
+                    description: Array of insight report objects.
+                required:
+                - insights
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Invalid request
+                    detail: 'The summary_ids parameter must contain at least one valid ID
+
+                      '
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                FORBIDDEN:
+                  value:
+                    title: Forbidden
+                    detail: 'The caller is not authorized to access this entity
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Insights
+  /details:
+    get:
+      operationId: getEvalDetails
+      description: 'Retrieve per-conversation evaluation results by evaluation IDs.
+
+        '
+      summary: Get evaluation details
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The entity ID (e.g. WhatsApp Business phone number ID)
+
+          '
+      - name: eval_ids
+        in: query
+        required: true
+        schema:
+          type: string
+          example: 'pfbid02Sm4Rn7QtX9bW3yZ6vKcJ8dHfA1pLuE5gToNl,pfbid02Tn5Qp8RuY2cX4zA7wLdK9eJgB3mMvF6hUoPl
+
+            '
+        description: 'Comma-separated list of evaluation IDs to retrieve
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        200:
+          description: The requested evaluations.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  evaluations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BizAIEvalDetailResponse'
+                    description: List of evaluation results.
+                required:
+                - evaluations
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Invalid request
+                    detail: 'The eval_ids parameter is missing or contains too many IDs
+
+                      '
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                FORBIDDEN:
+                  value:
+                    title: Forbidden
+                    detail: 'The caller is not authorized to access this entity
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Insights
+  /run:
+    get:
+      operationId: getEvalRunStatus
+      description: 'Poll the status and results of a previously submitted evaluation job.
+
+        '
+      summary: Get evaluation job status
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The entity ID (e.g. WhatsApp Business phone number ID)
+
+          '
+      - name: job_id
+        in: query
+        required: true
+        schema:
+          type: string
+          example: 'pfbid02Sm4Rn7QtX9bW3yZ6vKcJ8dHfA1pLuE5gToNl
+
+            '
+        description: 'The job ID returned by the POST /run endpoint.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        200:
+          description: 'Current job status and results (if completed).
+
+            '
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIComboJobStatusResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Job Not Found
+                    detail: 'The requested evaluation job was not found
+
+                      '
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                FORBIDDEN:
+                  value:
+                    title: Forbidden
+                    detail: 'The caller is not authorized to access this entity
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Insights
+    post:
+      operationId: runEvaluation
+      description: 'Submit a combo evaluation job that runs simulation, evaluation, and optionally insights across multiple
+        cases. Returns a job_id for polling.
+
+        '
+      summary: Run an evaluation job
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The entity ID (e.g. WhatsApp Business phone number ID)
+
+          '
+      - name: eval_case_ids
+        in: query
+        required: true
+        schema:
+          type: string
+          example: 'pfbid02Sm4Rn7QtX9bW3yZ6vKcJ8dHfA1pLuE5gToNl,pfbid02Tn5Qp8RuY2cX4zA7wLdK9eJgB3mMvF6hUoPl
+
+            '
+        description: 'Comma-separated list of eval case IDs (pfbid format).
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BizAIComboRunRequest'
+      responses:
+        200:
+          description: 'Acknowledgment that the job was accepted for processing.
+
+            '
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIComboRunResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Invalid request
+                    detail: 'The request is invalid or missing required fields
+
+                      '
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not found
+                    detail: The requested resource was not found
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                FORBIDDEN:
+                  value:
+                    title: Forbidden
+                    detail: 'The caller is not authorized to access this entity
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Insights
+security:
+- OAuthToken__Authorization: []
+components:
+  schemas:
+    BizAIEvalCaseResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: '1234567890'
+          description: The eval case ent ID.
+        scenario:
+          type: string
+          example: 'Customer asks about return policy for damaged item
+
+            '
+          description: 'Free-form text defining the task and constraints for the user simulator.
+
+            '
+        scenario_version:
+          type: string
+          nullable: true
+          example: v40-2026-09-14
+          description: 'Published scenario suite version for this evaluation case.
+
+            '
+        categories:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: Category strings for the test scenario.
+        max_turns:
+          type: integer
+          nullable: true
+          example: 10
+          description: 'Maximum number of turns allowed in the conversation simulation.
+
+            '
+        success_criteria:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: 'Criteria strings the agent must meet for the test to pass.
+
+            '
+      required:
+      - id
+      - scenario
+    StandardError:
+      type: object
+      properties:
+        title:
+          type: string
+        detail:
+          type: string
+        type:
+          type: string
+        status:
+          type: integer
+      required:
+      - title
+      - detail
+    BizAIEvalSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: '1234567890'
+          description: 'The unique identifier for the insight report
+
+            '
+        avg_conversation_score:
+          type: number
+          example: 0.85
+          description: 'Average score across evaluated conversations
+
+            '
+        avg_turn_score:
+          type: number
+          example: 0.92
+          description: Average score across evaluated turns
+        summary:
+          type: string
+          example: 'Overall agent performance is strong with minor gaps in product knowledge
+
+            '
+          description: 'Natural-language summary of overall agent performance
+
+            '
+        highlights:
+          type: string
+          example: 'Handled 95% of queries without escalation
+
+            '
+          description: 'JSON array of highlight objects with description and evaluation IDs
+
+            '
+        top_failure_categories:
+          type: string
+          example: Product availability, pricing
+          description: 'JSON array of failure category objects with category, evaluation IDs, and recommended actions
+
+            '
+        eval_ids_by_score:
+          type: string
+          example: '{"5": ["eval_001"], "4": ["eval_002", "eval_003"]}'
+          description: 'JSON object grouping evaluation IDs by score
+
+            '
+        creation_time:
+          type: integer
+          example: 1714500000
+          description: 'Unix timestamp when the insight report was created
+
+            '
+        update_time:
+          type: integer
+          example: 1714500000
+          description: 'Unix timestamp when the insight report was last updated
+
+            '
+      required:
+      - id
+      - summary
+      - creation_time
+      - update_time
+    BizAIEvalDetailResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: '1234567890'
+          description: The evaluation ID
+        score:
+          type: integer
+          example: 85
+          description: 'Overall evaluation score from the judge LLM
+
+            '
+        per_turn_labels:
+          type: string
+          example: GOOD,GOOD,NEEDS_IMPROVEMENT
+          description: JSON array of per-turn label integers
+        reasons:
+          type: string
+          example: 'Agent provided accurate information but missed upsell opportunity
+
+            '
+          description: JSON array of {category, score, description, recommended_actions} objects
+        custom_success_criteria:
+          type: string
+          example: Correctly identified return eligibility
+          description: 'JSON array of client-specified success criteria strings
+
+            '
+        eval_case_id:
+          type: string
+          example: '9876543210'
+          description: 'ID of the eval case that defined the scenario and success criteria
+
+            '
+        transcript:
+          type: string
+          example: 'User: I want to return... Agent: Sure, let me help...'
+          description: 'JSON object with system_prompt and transcript_turns for the evaluated conversation
+
+            '
+        creation_time:
+          type: integer
+          example: 1714500000
+          description: 'Unix timestamp when the evaluation was created
+
+            '
+        update_time:
+          type: integer
+          example: 1714500000
+          description: 'Unix timestamp when the evaluation was last updated
+
+            '
+      required:
+      - id
+      - per_turn_labels
+      - reasons
+      - creation_time
+      - update_time
+    BizAIComboRunRequest:
+      type: object
+      additionalProperties: false
+    BizAIComboRunResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          example: '1234567890'
+          description: 'The unique identifier for the created evaluation job (pfbid format).
+
+            '
+        status:
+          type: string
+          example: RUNNING
+          description: 'Initial job status: QUEUED.'
+      required:
+      - job_id
+      - status
+    BizAIComboJobResult:
+      type: object
+      properties:
+        summary_id:
+          type: string
+          example: '1234567890'
+          description: 'The unique identifier for the summary report
+
+            '
+        avg_conversation_score:
+          type: number
+          example: 0.85
+          description: 'Average score across evaluated conversations (range: 1-5)'
+        avg_turn_score:
+          type: number
+          example: 0.92
+          description: 'Average score across evaluated turns, where a turn is a user-agent message pair. This is a finer-granularity
+            score than avg_conversation_score (range: 1-5).'
+        summary:
+          type: string
+          example: 'Overall agent performance is strong with minor gaps in product knowledge
+
+            '
+          description: 'Natural-language summary of overall agent performance
+
+            '
+        highlights:
+          type: string
+          example: 'Handled 95% of queries without escalation
+
+            '
+          description: 'JSON array of highlight objects with description and evaluation IDs
+
+            '
+        top_failure_categories:
+          type: string
+          example: Product availability, pricing
+          description: 'JSON array of failure category objects with category, evaluation IDs, and recommended actions
+
+            '
+        eval_ids_by_score:
+          type: string
+          example: '{"5": ["eval_001"], "4": ["eval_002", "eval_003"]}'
+          description: 'JSON object grouping evaluation IDs by score
+
+            '
+        creation_time:
+          type: integer
+          example: 1714500000
+          description: 'Unix timestamp when the insight report was created
+
+            '
+        update_time:
+          type: integer
+          example: 1714500000
+          description: 'Unix timestamp when the insight report was last updated
+
+            '
+      required:
+      - summary_id
+      - summary
+      - creation_time
+      - update_time
+    BizAIComboJobStatusResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: COMPLETED
+          description: 'Job status: QUEUED, RUNNING, COMPLETED, or FAILED.'
+        progress:
+          type: object
+          nullable: true
+          properties:
+            completed:
+              type: integer
+              example: 37
+              description: Number of eval cases completed.
+            total:
+              type: integer
+              example: 50
+              description: Total number of eval cases in the job.
+            current_stage:
+              type: string
+              example: evaluation
+              description: 'Current pipeline stage: simulation, evaluation, insights, or done.'
+          required:
+          - completed
+          - total
+          - current_stage
+          description: 'Progress information while the job is running.
+
+            '
+        result:
+          nullable: true
+          description: 'Full result payload when status is COMPLETED.
+
+            '
+          allOf:
+          - $ref: '#/components/schemas/BizAIComboJobResult'
+        error:
+          type: object
+          nullable: true
+          properties:
+            code:
+              type: string
+              example: SIMULATION_FAILED
+              description: Error code (e.g. SIMULATION_FAILED).
+            message:
+              type: string
+              example: 'The agent did not respond within the simulation timeout.
+
+                '
+              description: Human-readable error message.
+            failed_case_ids:
+              type: array
+              items:
+                type: string
+              description: IDs of cases that failed.
+          required:
+          - code
+          - message
+          description: Error details when status is FAILED.
+      required:
+      - status
+  securitySchemes:
+    OAuthToken__Authorization:
+      type: http
+      scheme: bearer

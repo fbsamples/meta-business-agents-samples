@@ -1,0 +1,8 @@
+description: Customer asks about a refund.
+turns:
+  - user: Has my refund for order 1002 been processed?
+    expect:
+      contains_any: ["refund"]
+success_criteria:
+  - Reports the refund status and amount from the refund data.
+  - Does not promise timing beyond the return policy.

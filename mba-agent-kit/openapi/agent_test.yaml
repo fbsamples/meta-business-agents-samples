@@ -1,0 +1,231 @@
+openapi: 3.1.1
+info:
+  title: Agent Test
+  summary: 'Send test messages to the AI agent for automated testing.
+
+    '
+  version: 2.0.0
+  description: 'This endpoint sends test messages to the AI agent for automated testing without requiring a real consumer
+    phone number. Messages are processed through the full agent pipeline and the response is returned synchronously. Use it
+    to validate agent behavior, test knowledge base responses, and verify skill/connector integrations during development.
+    Tokens consumed while testing through this endpoint are not billed. Requests are rate limited to 500 per hour for each
+    `entity_id`, and to 10,000 per hour for each app on this endpoint. Exceeding either limit returns `429 Too Many Requests`.
+    These limits are subject to change.
+
+    '
+  license:
+    name: Meta Business AI Terms of Service
+    url: 'https://www.facebook.com/legal/3774714022740775
+
+      '
+servers:
+- url: https://api.facebook.com/{entity_id}/agent_test
+tags:
+- name: Agent Config
+  description: Agent configuration and settings
+- name: Business AI
+  description: Business AI API operations
+paths:
+  /:
+    post:
+      operationId: runAgentTest
+      description: 'Send a test message to the AI agent and receive a response. Messages are processed through the full agent
+        pipeline without requiring a consumer phone number. Tokens consumed while testing through this endpoint are not billed.
+
+        '
+      summary: Run an agent test
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID for the AI agent to test.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BizAIOmniChannelAgentTestRequest'
+      responses:
+        200:
+          description: 'Response containing the AI agent response and test conversation metadata
+
+            '
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIOmniChannelAgentTestResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Agent Config
+      - Business AI
+security:
+- OAuthToken__Authorization: []
+components:
+  schemas:
+    BizAIOmniChannelAgentTestRequest:
+      type: object
+      properties:
+        user_msg:
+          type: string
+          example: What products do you have?
+          description: 'The text content of the test message to send to the AI agent
+
+            '
+        conversation_id:
+          type: string
+          example: conv_abc123
+          description: 'Identifier for multi-turn test conversations. Provide the conversation_id from a previous response
+            to continue that conversation.
+
+            '
+      required:
+      - user_msg
+    BizAIOmniChannelAgentTestResponse:
+      type: object
+      properties:
+        message_id:
+          type: string
+          example: msg_abc123
+          description: 'Unique identifier for this message exchange
+
+            '
+        agent_response:
+          type: string
+          example: We have several products available...
+          description: The AI agent response text
+        conversation_id:
+          type: string
+          example: conv_abc123
+          description: 'The test conversation identifier. Use this in subsequent requests for multi-turn conversations.
+
+            '
+        timestamp:
+          type: integer
+          example: 1714500000
+          description: 'Unix timestamp when the response was generated
+
+            '
+        handoff_reason:
+          type: string
+          nullable: true
+          example: complex_request
+          description: 'If the agent hands off to a human, this contains the reason
+
+            '
+        no_response_reason:
+          type: string
+          nullable: true
+          example: out_of_scope
+          description: 'If the agent did not generate a response, this contains the reason. Possible values include ELIGIBILITY_CHECK_FAILED.
+
+            '
+        quick_replies:
+          type: array
+          items:
+            type: string
+          description: 'Suggested quick reply messages generated by the AI agent
+
+            '
+        product_variant_ids:
+          type: array
+          items:
+            type: string
+          description: 'The variant IDs of the products referenced in the agent response
+
+            '
+      required:
+      - message_id
+      - agent_response
+      - conversation_id
+    StandardError:
+      type: object
+      properties:
+        title:
+          type: string
+        detail:
+          type: string
+        type:
+          type: string
+        status:
+          type: integer
+      required:
+      - title
+      - detail
+  securitySchemes:
+    OAuthToken__Authorization:
+      type: http
+      scheme: bearer

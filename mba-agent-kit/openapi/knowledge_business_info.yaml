@@ -1,0 +1,430 @@
+openapi: 3.1.1
+info:
+  title: Agent Knowledge - Business Info
+  summary: 'Manage business information for the AI agent on a specific entity.
+
+    '
+  version: 2.0.0
+  description: 'This endpoint manages business information for the AI agent on a specific entity. Business info includes payment
+    methods, return policies, shipping information, general business details, and contact/location information. The resource
+    is a singleton — one business info object per entity_id. Uses GET to retrieve, PUT to create or fully replace, and DELETE
+    to reset to defaults. Each operation is rate limited separately for each app and `entity_id` pair, to 1,000 requests per
+    hour. Once a limit is exhausted, further requests return `429` until the limit resets.
+
+    '
+  license:
+    name: Meta Business AI Terms of Service
+    url: 'https://www.facebook.com/legal/3774714022740775
+
+      '
+servers:
+- url: https://api.facebook.com/{entity_id}/agent_config/business_info
+tags:
+- name: Business AI
+  description: Business AI API operations
+- name: Knowledge
+  description: Knowledge base management
+paths:
+  /:
+    get:
+      operationId: getBusinessInfo
+      description: 'Retrieve the current business information for the specified entity. Returns empty/default values if none
+        has been configured.
+
+        '
+      summary: Get business information
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID, Instagram business account ID, or Instagram username for the
+          Meta Business Agent.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        200:
+          description: 'The current business information for the entity
+
+            '
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIOmniChannelKnowledgeBusinessInfoResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Knowledge
+    put:
+      operationId: updateBusinessInfo
+      description: 'Create or fully replace the business information for the specified entity. All provided fields will overwrite
+        existing values.
+
+        '
+      summary: Create or replace business information
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID, Instagram business account ID, or Instagram username for the
+          Meta Business Agent.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BizAIOmniChannelKnowledgeBusinessInfoRequest'
+      responses:
+        200:
+          description: 'The updated business information for the entity
+
+            '
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIOmniChannelKnowledgeBusinessInfoResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Knowledge
+    delete:
+      operationId: deleteBusinessInfo
+      description: 'Reset the business information for the specified entity to default values.
+
+        '
+      summary: Reset business information to defaults
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID, Instagram business account ID, or Instagram username for the
+          Meta Business Agent.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        204:
+          description: 'Business information cleared. No content returned.
+
+            '
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Knowledge
+security:
+- OAuthToken__Authorization: []
+components:
+  schemas:
+    BizAIOmniChannelKnowledgeContactInfo:
+      type: object
+      properties:
+        email:
+          type: string
+          example: support@example.com
+          description: Business email address
+        hours_of_operation:
+          type: string
+          example: Mon-Fri 9am-5pm EST
+          description: Business hours of operation
+        address:
+          type: string
+          example: 123 Main St, New York, NY 10001
+          description: Physical address of the business
+    BizAIOmniChannelKnowledgeBusinessInfoResponse:
+      type: object
+      properties:
+        payment_method:
+          type: string
+          example: We accept Visa, Mastercard, and PayPal
+          description: Accepted payment methods
+        return_policy:
+          type: string
+          example: 30-day return policy for unused items
+          description: The company return policy
+        purchase_info:
+          type: string
+          example: Order online or visit our stores
+          description: Information about how to make a purchase
+        delivery_and_shipping:
+          type: string
+          example: Free shipping on orders over $50
+          description: Details about delivery and shipping
+        business_description:
+          type: string
+          example: 'We are a retail company specializing in home goods
+
+            '
+          description: General information about the business
+        contact_info:
+          nullable: true
+          description: 'Contact and location details for the business. Null if not configured
+
+            '
+          allOf:
+          - $ref: '#/components/schemas/BizAIOmniChannelKnowledgeContactInfo'
+    StandardError:
+      type: object
+      properties:
+        title:
+          type: string
+        detail:
+          type: string
+        type:
+          type: string
+        status:
+          type: integer
+      required:
+      - title
+      - detail
+    BizAIOmniChannelKnowledgeBusinessInfoRequest:
+      type: object
+      properties:
+        payment_method:
+          type: string
+          example: We accept Visa, Mastercard, and PayPal
+          description: Accepted payment methods
+        return_policy:
+          type: string
+          example: 30-day return policy for unused items
+          description: The company return policy
+        purchase_info:
+          type: string
+          example: Order online or visit our stores
+          description: Information about how to make a purchase
+        delivery_and_shipping:
+          type: string
+          example: Free shipping on orders over $50
+          description: Details about delivery and shipping
+        business_description:
+          type: string
+          example: 'We are a retail company specializing in home goods
+
+            '
+          description: General information about the business
+        contact_info:
+          nullable: true
+          description: 'Contact and location details for the business
+
+            '
+          allOf:
+          - $ref: '#/components/schemas/BizAIOmniChannelKnowledgeContactInfo'
+  securitySchemes:
+    OAuthToken__Authorization:
+      type: http
+      scheme: bearer

@@ -1,0 +1,174 @@
+openapi: 3.1.1
+info:
+  title: Agent Onboarding
+  summary: 'Trigger AI agent onboarding for a specific entity.
+
+    '
+  version: 2.0.0
+  description: 'This endpoint triggers the onboarding flow for a Business AI agent on a specific entity. It creates the necessary
+    entities and schedules async jobs for data preparation. An optional catalog can be linked during onboarding. This endpoint
+    allows 1,000 requests per hour for each app and `entity_id` pair. Once that is exhausted, further requests return `429`
+    until the limit resets.
+
+    '
+  license:
+    name: Meta Business AI Terms of Service
+    url: 'https://www.facebook.com/legal/3774714022740775
+
+      '
+servers:
+- url: https://api.facebook.com/{entity_id}/agent_onboarding
+tags:
+- name: Business AI
+  description: Business AI API operations
+paths:
+  /:
+    post:
+      operationId: createOnboardingSession
+      description: 'Trigger AI agent onboarding for the specified entity. Creates the necessary entities and schedules async
+        jobs for data preparation. An optional catalog can be linked during onboarding.
+
+        '
+      summary: Create an onboarding session
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID, Instagram business account ID, or Instagram username for the
+          Meta Business Agent.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              nullable: true
+              allOf:
+              - $ref: '#/components/schemas/BizAIOmniChannelOnboardingRequest'
+      responses:
+        201:
+          description: Onboarding triggered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIOmniChannelOnboardingResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                FORBIDDEN:
+                  value:
+                    title: Forbidden
+                    detail: 'The caller is not authorized to perform this action
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+security:
+- OAuthToken__Authorization: []
+components:
+  schemas:
+    BizAIOmniChannelOnboardingRequest:
+      type: object
+      properties:
+        catalog_id:
+          type: string
+          nullable: true
+          example: '1234567890'
+          description: 'Canonical numeric catalog ID to link to the agent during onboarding. This is the ID shown in Commerce
+            Manager and returned by the Marketing API.
+
+            '
+    BizAIOmniChannelOnboardingResponse:
+      type: object
+      properties:
+        agent_id:
+          type: string
+          example: '1234567890'
+          description: The ID of the agent settings entity
+      required:
+      - agent_id
+    StandardError:
+      type: object
+      properties:
+        title:
+          type: string
+        detail:
+          type: string
+        type:
+          type: string
+        status:
+          type: integer
+      required:
+      - title
+      - detail
+  securitySchemes:
+    OAuthToken__Authorization:
+      type: http
+      scheme: bearer

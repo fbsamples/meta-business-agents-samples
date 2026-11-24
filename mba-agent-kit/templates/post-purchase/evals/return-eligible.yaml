@@ -1,0 +1,12 @@
+description: A returnable item; the agent must confirm before creating the return.
+turns:
+  - user: I want to return the jacket from order 1001, it doesn't fit
+    expect:
+      contains_any: ["confirm", "shall I", "would you like", "go ahead"]
+  - user: Yes please go ahead
+    expect:
+      contains_any: ["return", "label"]
+success_criteria:
+  - Checks eligibility with the order data before offering a return.
+  - Repeats the item and reason and asks for confirmation before submitting.
+  - Only submits after the customer confirms.

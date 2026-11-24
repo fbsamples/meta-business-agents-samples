@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mba doctor:*)",
+      "Bash(mba plan:*)",
+      "Bash(mba pull:*)",
+      "Bash(mba test:*)",
+      "Bash(mba eval:*)",
+      "Bash(mba eval-remote cases:*)",
+      "Bash(mba versions:*)",
+      "Bash(mba logs:*)",
+      "Bash(mba schema:*)",
+      "Bash(mba event get:*)",
+      "Bash(mba init:*)",
+      "Bash(python3 templates/post-purchase/mock-backend/server.py:*)",
+      "Bash(cloudflared tunnel --url http://localhost:8080)"
+    ],
+    "ask": [
+      "Bash(mba apply:*)",
+      "Bash(mba onboard:*)",
+      "Bash(mba enable:*)",
+      "Bash(mba disable:*)",
+      "Bash(mba rollback:*)",
+      "Bash(mba event send:*)",
+      "Bash(mba run-tool:*)",
+      "Bash(mba eval-remote run:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Bash(cat .env:*)"
+    ]
+  }
+}

@@ -1,0 +1,152 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Meta Business Agent config (agent.yaml)",
+  "description": "Desired state of one Meta Business Agent. Only the sections you include are managed by `mba apply`. Reference secrets as ${ENV_VAR}; never write them here.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version"],
+  "properties": {
+    "version": { "const": 1 },
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Agent behavior. Turning the agent on or off is not set here: use `mba enable` / `mba disable`.",
+      "properties": {
+        "ai_audience": { "enum": ["ALLOWLISTED_ONLY", "EVERYONE"] },
+        "handoff": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "description": "Release thread control after the handoff message." },
+            "message": { "type": "string" },
+            "message_selection": { "enum": ["DEFAULT", "AGENT", "CUSTOM"] }
+          }
+        },
+        "followup": {
+          "type": "object",
+          "required": ["enabled"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "followup_interval_in_seconds": { "enum": [0, 300, 900, 1800, 3600, 7200, 28800, 86400] },
+            "message": { "type": "string" }
+          }
+        },
+        "never_say_phrases": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "business_info": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "business_description": { "type": "string" },
+        "return_policy": { "type": "string" },
+        "delivery_and_shipping": { "type": "string" },
+        "payment_method": { "type": "string" },
+        "purchase_info": { "type": "string" },
+        "contact_info": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "email": { "type": "string" },
+            "hours_of_operation": { "type": "string" },
+            "address": { "type": "string" }
+          }
+        }
+      }
+    },
+    "skills": {
+      "type": "array",
+      "description": "Matched to the live agent by title.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "description"],
+        "oneOf": [{ "required": ["skill"] }, { "required": ["skill_file"] }],
+        "properties": {
+          "title": { "type": "string", "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$" },
+          "description": { "type": "string", "maxLength": 1024, "description": "When the agent should apply this skill." },
+          "skill": { "type": "string", "maxLength": 20000 },
+          "skill_file": { "type": "string", "description": "Path to a markdown file with the skill body, relative to agent.yaml." }
+        }
+      }
+    },
+    "faqs": {
+      "type": "array",
+      "description": "Matched by question (case and whitespace insensitive).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["question", "answer"],
+        "properties": { "question": { "type": "string" }, "answer": { "type": "string" } }
+      }
+    },
+    "faqs_file": { "type": "string", "description": "YAML list of {question, answer}, appended to faqs." },
+    "websites": {
+      "type": "array",
+      "description": "Matched by url.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["url"],
+        "properties": {
+          "url": { "type": "string", "format": "uri" },
+          "included_sub_domains": { "type": "array", "items": { "type": "string" } },
+          "included_url_patterns": { "type": "array", "items": { "type": "string" } },
+          "excluded_sub_domains": { "type": "array", "items": { "type": "string" } },
+          "excluded_url_patterns": { "type": "array", "items": { "type": "string" } },
+          "single_urls": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "allowlist": {
+      "type": "array",
+      "description": "Consumer phone numbers the agent answers while ai_audience is ALLOWLISTED_ONLY.",
+      "items": { "type": "string", "pattern": "^\\+?[0-9]{6,15}$" }
+    },
+    "connectors": {
+      "type": "array",
+      "description": "Matched by name; tools matched by name within their connector.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "base_url", "auth_type"],
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "base_url": { "type": "string", "pattern": "^https://" },
+          "connector_protocol": { "enum": ["HTTP", "MCP"] },
+          "auth_type": { "enum": ["OAUTH2", "OAUTH2_CLIENT_CREDENTIALS", "API_KEY", "BASIC", "CUSTOM", "NONE"] },
+          "auth_config": { "type": "object", "description": "Use ${ENV_VAR} for every secret value." },
+          "user_auth_injection_config": { "type": "object" },
+          "requires_certificate": { "type": "boolean" },
+          "tools": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "description", "request_definition", "user_auth_required"],
+              "properties": {
+                "name": { "type": "string" },
+                "description": { "type": "string", "description": "Tell the agent when to call this tool and what to ask for first." },
+                "user_auth_required": { "type": "boolean" },
+                "request_definition": {
+                  "type": "object",
+                  "required": ["method", "path"],
+                  "properties": {
+                    "method": { "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"] },
+                    "path": { "type": "string" },
+                    "path_parameters": { "type": "object" },
+                    "query_parameters": { "type": "object" },
+                    "headers": { "type": "object" },
+                    "body": { "type": "object" }
+                  }
+                },
+                "transformation_spec": { "type": "object" },
+                "user_auth_action_config": { "type": "object" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

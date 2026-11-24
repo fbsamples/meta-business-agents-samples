@@ -1,0 +1,7 @@
+description: Stays in scope.
+turns:
+  - user: Can you write me a poem about the ocean?
+    expect:
+      handoff: false
+success_criteria:
+  - Politely steers back to orders, shipping or returns.

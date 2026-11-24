@@ -1,0 +1,419 @@
+openapi: 3.1.1
+info:
+  title: Agent Allowlist
+  summary: 'Manage the consumer allowlist for the AI agent on a specific entity.
+
+    '
+  version: 2.0.0
+  description: 'This endpoint manages the consumer allowlist for the AI agent on a specific entity. When the AIAudience setting
+    is set to ALLOWLISTED_ONLY, the agent only responds to consumers whose identifiers are in this list. Uses POST to add
+    entries, GET to list all entries, and DELETE to remove individual entries. Adding, listing, and removing entries are each
+    rate limited for each app and `entity_id` pair, counted separately per operation, to 1,000 requests per hour each. Exceeding
+    a limit returns `429 Too Many Requests`. These limits are subject to change.
+
+    '
+  license:
+    name: Meta Business AI Terms of Service
+    url: 'https://www.facebook.com/legal/3774714022740775
+
+      '
+servers:
+- url: https://api.facebook.com/{entity_id}/agent_config/allowlist
+tags:
+- name: Agent Config
+  description: Agent configuration and settings
+- name: Business AI
+  description: Business AI API operations
+paths:
+  /:
+    get:
+      operationId: listAllowlist
+      description: 'Retrieve all allowlisted consumers for the specified entity
+
+        '
+      summary: List allowlist entries
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp phone number ID or Instagram business account ID for the agent.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        200:
+          description: A list of all allowlist entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BizAIOmniChannelAllowlistResponseV2'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Invalid request
+                    detail: The request is invalid
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not found
+                    detail: The requested resource was not found
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Agent Config
+      - Business AI
+    post:
+      operationId: addToAllowlist
+      description: 'Add a consumer to the allowlist for the specified entity. Identify a WhatsApp consumer by either `consumer_phone_number`
+        or `consumer_bsuid`, and an Instagram consumer by `consumer_instagram_username`. Each request adds one entry. A WhatsApp
+        business phone number can hold up to 20 allowlisted consumers across both identifiers, and an Instagram business account
+        can hold up to 20 allowlisted Instagram accounts. The two limits are counted separately. Adding an entry once the
+        allowlist is full returns `400 Bad Request`, and the error detail reports the current maximum.
+
+        '
+      summary: Add to allowlist
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp phone number ID or Instagram business account ID for the agent.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BizAIOmniChannelAllowlistRequestV2'
+      responses:
+        201:
+          description: The newly created allowlist entry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIOmniChannelAllowlistResponseV2'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Invalid request
+                    detail: 'The request or consumer identifier is invalid
+
+                      '
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not found
+                    detail: The requested resource was not found
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Agent Config
+      - Business AI
+  /{entry_id}:
+    delete:
+      operationId: removeFromAllowlist
+      description: 'Remove a specific allowlist entry by its ID
+
+        '
+      summary: Remove from allowlist
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp phone number ID or Instagram business account ID for the agent.
+
+          '
+      - name: entry_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '{entry_id}'
+        description: 'The identifier of the allowlist entry, as returned in the `id` field when the entry was added or listed.
+          Pass that value through unchanged.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        204:
+          description: Allowlist entry successfully deleted
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Allowlist entry not found
+                    detail: 'The specified allowlist entry was not found
+
+                      '
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Agent Config
+      - Business AI
+security:
+- OAuthToken__Authorization: []
+components:
+  schemas:
+    BizAIOmniChannelAllowlistRequestV2:
+      type: object
+      properties:
+        consumer_phone_number:
+          type: string
+          example: '+15551234567'
+          description: 'Consumer WhatsApp phone number in E.164 format. Allowed only when the entity is a WhatsApp business
+            phone number. Mutually exclusive with `consumer_bsuid` and `consumer_instagram_username`.
+
+            '
+        consumer_bsuid:
+          type: string
+          example: US.2788620304833812
+          description: 'The Business-Scoped User ID (BSUID) of the consumer, as webhooks deliver it, for example `US.2788620304833812`.
+            Use this instead of `consumer_phone_number` to allowlist a consumer whose messages carry no phone number. Allowed
+            only when the entity is a WhatsApp business phone number. Mutually exclusive with `consumer_phone_number` and
+            `consumer_instagram_username`.
+
+            '
+        consumer_instagram_username:
+          type: string
+          example: example_user
+          description: Instagram username for the consumer, without the leading `@`. Required when the entity is an Instagram
+            business asset, and must be omitted for WhatsApp business phone numbers. Mutually exclusive with `consumer_phone_number`
+            and `consumer_bsuid`.
+    BizAIOmniChannelAllowlistResponseV2:
+      type: object
+      properties:
+        id:
+          type: string
+          example: '{entry_id}'
+          description: 'The unique identifier for this allowlist entry. Pass this value unchanged as the `entry_id` path parameter
+            to remove the entry.
+
+            '
+        consumer_phone_number:
+          type: string
+          example: '+15551234567'
+          description: 'Consumer WhatsApp phone number in E.164 format. Present on entries for WhatsApp business phone number
+            entities that were added by phone number. Mutually exclusive with `consumer_bsuid` and `consumer_instagram_username`.
+
+            '
+        consumer_bsuid:
+          type: string
+          example: US.2788620304833812
+          description: 'The Business-Scoped User ID (BSUID) of the consumer. Present on entries for WhatsApp business phone
+            number entities that were added by BSUID. Mutually exclusive with `consumer_phone_number` and `consumer_instagram_username`.
+
+            '
+        consumer_instagram_username:
+          type: string
+          example: example_user
+          description: 'Current Instagram username for the consumer. Present on Instagram entries when the account is available.
+            Mutually exclusive with `consumer_phone_number` and `consumer_bsuid`.
+
+            '
+      required:
+      - id
+    StandardError:
+      type: object
+      properties:
+        title:
+          type: string
+        detail:
+          type: string
+        type:
+          type: string
+        status:
+          type: integer
+      required:
+      - title
+      - detail
+  securitySchemes:
+    OAuthToken__Authorization:
+      type: http
+      scheme: bearer

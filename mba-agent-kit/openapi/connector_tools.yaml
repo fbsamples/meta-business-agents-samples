@@ -1,0 +1,1473 @@
+openapi: 3.1.1
+info:
+  title: Connector Tools
+  summary: 'Manage tool (endpoint/operation) definitions for a specific connector.
+
+    '
+  version: 2.0.0
+  description: 'This endpoint provides CRUD operations for managing tool definitions for a specific connector. Tools define
+    the individual operations (endpoints) available on an external API, including the canonical outbound request definition
+    and user-auth extraction metadata. Each tool must have a descriptive `name` and `description` so the agent knows when
+    and how to use it. In the `request_definition`, define the body schema with explicit field types, descriptions, and required
+    fields rather than using unstructured objects — the agent uses this schema to extract the correct values from the conversation
+    and build valid API requests. Each operation is rate limited separately for each app and `entity_id` pair, to 1,000 requests
+    per hour. Once a limit is exhausted, further requests return `429` until the limit resets.
+
+    '
+  license:
+    name: Meta Business AI Terms of Service
+    url: 'https://www.facebook.com/legal/3774714022740775
+
+      '
+servers:
+- url: https://api.facebook.com/{entity_id}/agent_connectors/{connector_id}/tools
+tags:
+- name: Business AI
+  description: Business AI API operations
+- name: Connectors
+  description: External API connector management
+paths:
+  /:
+    get:
+      operationId: listConnectorTools
+      description: 'Retrieve every tool defined on the specified connector. This is the complete set of operations the agent
+        can invoke through it.
+
+        '
+      summary: List connector tools
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The Facebook Page ID, WhatsApp Business Phone Number ID or Instagram username for the Meta Business
+          Agent.
+
+          '
+      - name: connector_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: 'pfbid02Cx7Rm4TqV9nB3wY6zJkD8sHfA5pLuE1gTaNl
+
+            '
+        description: 'The identifier of the parent connector, as returned in the `id` field when the connector was created
+          or listed. Pass that value through unchanged.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        200:
+          description: A list of all tools
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BizAIOmniChannelConnectorToolResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Connectors
+    post:
+      operationId: createConnectorTool
+      description: 'Create a tool on the specified connector. A tool is one callable operation against the external API the
+        connector points at: the connector supplies the base URL and authentication, and the tool supplies the specific request
+        to make. During a conversation the agent chooses which tool to invoke based on the tool''s `description`, then builds
+        the call from its `request_definition`. A connector with no tools is never invoked.'
+      summary: Create a connector tool
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The Facebook Page ID, WhatsApp Business Phone Number ID or Instagram username for the Meta Business
+          Agent.
+
+          '
+      - name: connector_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: 'pfbid02Cx7Rm4TqV9nB3wY6zJkD8sHfA5pLuE1gTaNl
+
+            '
+        description: 'The identifier of the parent connector, as returned in the `id` field when the connector was created
+          or listed. Pass that value through unchanged.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BizAIOmniChannelConnectorToolRequest'
+      responses:
+        201:
+          description: The newly created tool
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIOmniChannelConnectorToolResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                FORBIDDEN:
+                  value:
+                    title: Forbidden
+                    detail: 'The access token does not have permission to manage connector tools for this entity
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Connectors
+  /{tool_id}:
+    get:
+      operationId: getConnectorTool
+      description: 'Retrieve a single tool by its ID, including its request definition, its authentication requirement, and
+        any response transformation configured on it.
+
+        '
+      summary: Get a connector tool
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The Facebook Page ID, WhatsApp Business Phone Number ID or Instagram username for the Meta Business
+          Agent.
+
+          '
+      - name: connector_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: 'pfbid02Cx7Rm4TqV9nB3wY6zJkD8sHfA5pLuE1gTaNl
+
+            '
+        description: 'The identifier of the parent connector, as returned in the `id` field when the connector was created
+          or listed. Pass that value through unchanged.
+
+          '
+      - name: tool_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: 'pfbid02Wd6Qn3ZtR8mC4xV7yGhK9sJbF1pAuL5eToPl
+
+            '
+        description: 'The identifier of the tool, as returned in the `id` field when the tool was created or listed. Pass
+          that value through unchanged.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        200:
+          description: The requested tool
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIOmniChannelConnectorToolResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Connectors
+    put:
+      operationId: updateConnectorTool
+      description: 'Update a tool by its ID. Send the required fields with the values you want the tool to have. Omitting
+        `transformation_spec` leaves the stored transformation unchanged; send it as `null` to remove the transformation.
+
+        '
+      summary: Update a connector tool
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The Facebook Page ID, WhatsApp Business Phone Number ID or Instagram username for the Meta Business
+          Agent.
+
+          '
+      - name: connector_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: 'pfbid02Cx7Rm4TqV9nB3wY6zJkD8sHfA5pLuE1gTaNl
+
+            '
+        description: 'The identifier of the parent connector, as returned in the `id` field when the connector was created
+          or listed. Pass that value through unchanged.
+
+          '
+      - name: tool_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: 'pfbid02Wd6Qn3ZtR8mC4xV7yGhK9sJbF1pAuL5eToPl
+
+            '
+        description: 'The identifier of the tool, as returned in the `id` field when the tool was created or listed. Pass
+          that value through unchanged.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BizAIOmniChannelConnectorToolRequest'
+      responses:
+        200:
+          description: The updated tool
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIOmniChannelConnectorToolResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                FORBIDDEN:
+                  value:
+                    title: Forbidden
+                    detail: 'The access token does not have permission to manage connector tools for this entity
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Connectors
+    delete:
+      operationId: deleteConnectorTool
+      description: 'Delete a tool by its ID. The agent can no longer invoke this operation. The parent connector and its remaining
+        tools are unaffected.
+
+        '
+      summary: Delete a connector tool
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The Facebook Page ID, WhatsApp Business Phone Number ID or Instagram username for the Meta Business
+          Agent.
+
+          '
+      - name: connector_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: 'pfbid02Cx7Rm4TqV9nB3wY6zJkD8sHfA5pLuE1gTaNl
+
+            '
+        description: 'The identifier of the parent connector, as returned in the `id` field when the connector was created
+          or listed. Pass that value through unchanged.
+
+          '
+      - name: tool_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: 'pfbid02Wd6Qn3ZtR8mC4xV7yGhK9sJbF1pAuL5eToPl
+
+            '
+        description: 'The identifier of the tool, as returned in the `id` field when the tool was created or listed. Pass
+          that value through unchanged.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        204:
+          description: Tool successfully deleted
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                FORBIDDEN:
+                  value:
+                    title: Forbidden
+                    detail: 'The access token does not have permission to manage connector tools for this entity
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Connectors
+  /{tool_id}/run:
+    post:
+      operationId: runConnectorTool
+      description: 'Execute a tool action. Returns the raw response from the upstream API endpoint. Use this to verify that
+        a tool''s request definition and the connector''s credentials work before relying on the agent to invoke the tool
+        in a live conversation.
+
+        '
+      summary: Run a connector tool
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The Facebook Page ID, WhatsApp Business Phone Number ID or Instagram username for the Meta Business
+          Agent.
+
+          '
+      - name: connector_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: 'pfbid02Cx7Rm4TqV9nB3wY6zJkD8sHfA5pLuE1gTaNl
+
+            '
+        description: 'The identifier of the parent connector, as returned in the `id` field when the connector was created
+          or listed. Pass that value through unchanged.
+
+          '
+      - name: tool_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: 'pfbid02Wd6Qn3ZtR8mC4xV7yGhK9sJbF1pAuL5eToPl
+
+            '
+        description: 'The identifier of the tool, as returned in the `id` field when the tool was created or listed. Pass
+          that value through unchanged.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BizAIOmniChannelConnectorToolRunRequest'
+      responses:
+        200:
+          description: The tool execution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIOmniChannelConnectorToolRunResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Connectors
+security:
+- OAuthToken__Authorization: []
+components:
+  schemas:
+    BizAIOmniChannelConnectorToolParameterBinding:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - default
+          - macro
+          example: default
+          description: 'Source mode for a Meta Business Agent-owned field.
+
+            '
+        value:
+          type: string
+          nullable: true
+          example: Sample item
+          description: 'Typed literal value, required when `kind = "default"`; It must be provided as a string, and the underlying
+            value must match the node type. It will be converted into the appropriate node type when making toolcalls to the
+            underlying endpoint.
+
+            '
+        macro:
+          type: string
+          nullable: true
+          enum:
+          - WHATSAPP_PHONE_NUMBER
+          - WHATSAPP_PHONE_NUMBER_NATIONAL
+          - WHATSAPP_IDENTITY_HASH
+          - WHATSAPP_CURRENT_STATUS_ID
+          - WHATSAPP_BSUID
+          - USER_MESSAGE
+          - WHATSAPP_CONVERSATION_ID
+          - WHATSAPP_MESSAGE_ID
+          - INSTAGRAM_IGSID
+          - INSTAGRAM_CONVERSATION_ID
+          - REQUEST_ID
+          example: WHATSAPP_PHONE_NUMBER
+          description: 'Registered Meta Business Agent macro ID, required when `kind = "macro"`.
+
+            '
+      required:
+      - kind
+    BizAIOmniChannelConnectorToolParameterNode:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - string
+          - integer
+          - number
+          - boolean
+          example: string
+          description: Node type.
+        description:
+          type: string
+          nullable: true
+          example: 'The unique identifier of the order to look up.
+
+            '
+          description: 'Human-readable documentation for the parameter. Always provide a description — the agent uses it to
+            understand what value to extract from the conversation and pass to the API.
+
+            '
+        required:
+          type: boolean
+          nullable: true
+          example: true
+          description: 'Whether the field is required. This field is ignored for path params, since they are always required.
+
+            '
+        binding:
+          nullable: true
+          example:
+            kind: default
+            value: Sample item
+          description: 'Meta Business Agent-owned binding for this node; omitted means agent/runtime input at the node''s
+            canonical path.
+
+            '
+          allOf:
+          - $ref: '#/components/schemas/BizAIOmniChannelConnectorToolParameterBinding'
+      required:
+      - type
+    BizAIOmniChannelConnectorToolBodyNode:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - object
+          - array
+          - string
+          - integer
+          - number
+          - boolean
+          example: string
+          description: 'Node type. When defining a field that contains structured data, use `object` with explicit `properties`
+            rather than `string`. Fully defined schemas allow the agent to extract and pass the correct fields automatically.
+            Avoid using `object` without defining its `properties`, as this causes the agent to guess the expected structure.
+
+            '
+        description:
+          type: string
+          nullable: true
+          example: The name of the item to create.
+          description: 'Human-readable documentation for the field or container. Always provide a description for every node
+            — the agent uses it to understand what data each field expects and to extract the right values from the conversation.
+
+            '
+        required:
+          type: array
+          nullable: true
+          example:
+          - key
+          - value
+          items:
+            type: string
+          description: 'Required properties of this object. It can only be provided for "object" type nodes.
+
+            '
+        properties:
+          type: object
+          nullable: true
+          example:
+            key: '{"type":"string","description":"Property key."}'
+            value: '{"type":"string","description":"Property value."}'
+          additionalProperties:
+            type: string
+            description: 'BodyNode element schema for a child field. This field needs to be provided as a string of the BodyNode
+              type.
+
+              '
+          description: 'Child fields for `object` nodes; keys are canonical outbound field names, value is a string representation
+            of the BodyNode type. Only provide when node is of type `object`. Always define explicit properties with their
+            types and descriptions instead of leaving an object undefined — the agent needs a fully specified schema to correctly
+            populate the request.
+
+            '
+        items:
+          type: string
+          nullable: true
+          example: '{"type":"object","description":"Key-value item property.","required":["key","value"],"properties":{"key":"{\"type\":\"string\",\"description\":\"Property
+            key.\"}","value":"{\"type\":\"string\",\"description\":\"Property value.\"}"}}'
+          description: 'BodyNode element schema for `array` nodes. Only provide when node is of type `array`. This field needs
+            to be provided as a string representation of the BodyNode type.
+
+            '
+        binding:
+          nullable: true
+          example:
+            kind: default
+            value: Sample item
+          description: 'Meta Business Agent-owned binding for this node; omitted means agent/runtime input at the node’s canonical
+            path. This cannot be provided for an "object" or "array" type node
+
+            '
+          allOf:
+          - $ref: '#/components/schemas/BizAIOmniChannelConnectorToolParameterBinding'
+      required:
+      - type
+    BizAIOmniChannelConnectorToolRequestBodyDefinition:
+      type: object
+      properties:
+        content_type:
+          type: string
+          enum:
+          - application/json
+          example: application/json
+          description: 'Request body content type; currently only supports `application/json`
+
+            '
+        params:
+          type: object
+          example:
+            name:
+              type: string
+              description: Item name.
+            price:
+              type: integer
+              description: Item price in cents.
+            properties:
+              type: array
+              description: Custom item properties.
+              items: '{"type":"object","description":"Key-value item property.","required":["key","value"],"properties":{"key":"{\"type\":\"string\",\"description\":\"Property
+                key.\"}","value":"{\"type\":\"string\",\"description\":\"Property value.\"}"}}'
+          additionalProperties:
+            $ref: '#/components/schemas/BizAIOmniChannelConnectorToolBodyNode'
+          description: 'Top-level JSON body fields; keys are canonical outbound field names.
+
+            '
+        required:
+          type: array
+          nullable: true
+          example:
+          - name
+          - price
+          items:
+            type: string
+          description: 'Required top-level body fields. Entries must be keys present in `params`.
+
+            '
+      required:
+      - content_type
+      - params
+    BizAIOmniChannelConnectorToolRequestDefinition:
+      type: object
+      properties:
+        method:
+          type: string
+          enum:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - PATCH
+          example: POST
+          description: HTTP method for the outbound request.
+        path:
+          type: string
+          example: /items
+          description: Outbound request path template, including `{placeholder}` segments for path parameters.
+        path_parameters:
+          type: object
+          example: {}
+          additionalProperties:
+            $ref: '#/components/schemas/BizAIOmniChannelConnectorToolParameterNode'
+          description: 'Path-parameter schema; property names must match the placeholder names used in `path`.
+
+            '
+        query_parameters:
+          type: object
+          example: {}
+          additionalProperties:
+            $ref: '#/components/schemas/BizAIOmniChannelConnectorToolParameterNode'
+          description: 'Query-parameter schema; property names are the canonical outbound query parameter names.
+
+            '
+        headers:
+          type: object
+          example: {}
+          additionalProperties:
+            $ref: '#/components/schemas/BizAIOmniChannelConnectorToolParameterNode'
+          description: 'Header schema; property names are the canonical outbound header names.
+
+            '
+        body:
+          nullable: true
+          example:
+            content_type: application/json
+            params:
+              name:
+                type: string
+                description: Item name.
+              price:
+                type: integer
+                description: Item price in cents.
+              properties:
+                type: array
+                description: Custom item properties.
+                items: '{"type":"object","description":"Key-value item property.","required":["key","value"],"properties":{"key":"{\"type\":\"string\",\"description\":\"Property
+                  key.\"}","value":"{\"type\":\"string\",\"description\":\"Property value.\"}"}}'
+            required:
+            - name
+            - price
+          description: 'Request body definition; omit or set to `null` when the request has no body.
+
+            '
+          allOf:
+          - $ref: '#/components/schemas/BizAIOmniChannelConnectorToolRequestBodyDefinition'
+      required:
+      - method
+      - path
+    BizAIOmniChannelConnectorToolUserAuthToolConfig:
+      type: object
+      properties:
+        user_action_tool_type:
+          type: string
+          enum:
+          - auth
+          - refresh
+          example: auth
+          description: 'Type of user auth action: auth performs the initial user authorization, while refresh uses an existing
+            refresh token.'
+        user_auth_token_path:
+          type: string
+          example: data.access_token
+          description: 'Dot-path used to extract the access token from a login/refresh tool response.
+
+            '
+        refresh_token_path:
+          type: string
+          nullable: true
+          example: data.refresh_token
+          description: 'Dot-path used to extract the refresh token from a login/refresh tool response.
+
+            '
+        expires_at_path:
+          type: string
+          nullable: true
+          example: data.expires_at
+          description: 'Dot-path used to extract token expiry from a login/refresh tool response.
+
+            '
+        expires_at_type:
+          type: string
+          nullable: true
+          enum:
+          - absolute
+          - relative_seconds
+          example: absolute
+          description: 'How to interpret the value found at `expires_at_path`.
+
+            '
+      required:
+      - user_action_tool_type
+      - user_auth_token_path
+    BizAIOmniChannelConnectorToolTransformationStep:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - allowlist
+          - case
+          - catalog
+          - decorate_url
+          - dedupe
+          - dehydrate
+          - filter
+          - first_nonempty
+          - first_nonnull
+          - first_nonzero
+          - format
+          - html_escape
+          - lookup
+          - math
+          - proxy_image
+          - render_image
+          - reshape
+          - shadow_allowlist
+          - string_replace
+          - truncate
+          example: math
+          description: 'The kind of transformation this step performs (e.g., `math` for numeric conversions, `allowlist` for
+            pruning the response to a set of fields).
+
+            '
+        target:
+          type: string
+          nullable: true
+          example: items[*]
+          description: Path selecting the fields this step operates on, using `.key` to descend into an object, `[*]` to apply
+            to every element of a list, and `[n]` for a specific index. Omit for steps that operate on the whole response.
+        params:
+          type: string
+          nullable: true
+          example: '{"output_field":"price_display","output_format":"string","expr":{"op":"divide","rounding":"up","operands":[{"field":"price.single_value"},{"literal":100000}]}}'
+          description: 'Kind-specific parameters, provided as a JSON object encoded as a string. The accepted keys depend
+            on `kind` — for example, a `math` step takes an expression and an output field, while an `allowlist` step takes
+            the paths to keep. For a `math` step, the expression may nest sub-expressions up to 4 levels deep; deeper nesting
+            is rejected.
+
+            '
+      required:
+      - kind
+    BizAIOmniChannelConnectorToolTransformationSpec:
+      type: object
+      properties:
+        version:
+          type: integer
+          example: 1
+          description: 'Spec format version. Currently only `1` is supported.
+
+            '
+        steps:
+          type: array
+          example:
+          - kind: math
+            target: items[*]
+            params: '{"output_field":"price_display","output_format":"string","expr":{"op":"divide","rounding":"up","operands":[{"field":"price.single_value"},{"literal":100000}]}}'
+          - kind: allowlist
+            params: '{"paths":["items.item_id","items.title","items.price"],"wildcards":["*_display"]}'
+          items:
+            $ref: '#/components/schemas/BizAIOmniChannelConnectorToolTransformationStep'
+          description: 'Ordered list of transformation steps applied top-to-bottom to the tool response before it is returned
+            to the agent. Order matters — for example, a `math` step that adds a display field must run before an `allowlist`
+            step that keeps that field. A spec may contain at most 5 steps.
+
+            '
+      required:
+      - version
+      - steps
+    BizAIOmniChannelConnectorToolRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: check_order_status
+          description: 'Stable tool/action key, visible to the agent. Letters, numbers, and underscores only — spaces, hyphens,
+            and other punctuation are rejected. It also cannot start or end with an underscore, or contain two underscores
+            in a row, so `check_order_status` is accepted while `_check_order`, `check_order_`, and `check__order` are not.
+            Use a clear, descriptive name that indicates the action (e.g., `check_order_status`, `create_return_request`).
+            Avoid generic names like `action1` or `tool`.
+
+            '
+        description:
+          type: string
+          example: 'Use this tool when a customer asks about the status of an existing order. Requires an order ID. Returns
+            the order status, estimated delivery date, and tracking information.
+
+            '
+          description: 'Human-readable description of what this tool does and when to use it. The agent relies on this description
+            to decide when to invoke the tool during a conversation. Be specific about the action, expected inputs, and what
+            the tool returns. For example: "Use this tool when a customer asks about the status of an existing order. Requires
+            an order ID. Returns the order status, estimated delivery date, and tracking information." Vague or missing descriptions
+            cause the agent to invoke tools incorrectly or not at all.'
+        request_definition:
+          example:
+            method: POST
+            path: /items
+            path_parameters: {}
+            query_parameters: {}
+            headers: {}
+            body:
+              content_type: application/json
+              params:
+                name:
+                  type: string
+                  description: Item name.
+                price:
+                  type: integer
+                  description: Item price in cents.
+                properties:
+                  type: array
+                  description: Custom item properties.
+                  items: '{"type":"object","description":"Key-value item property.","required":["key","value"],"properties":{"key":"{\"type\":\"string\",\"description\":\"Property
+                    key.\"}","value":"{\"type\":\"string\",\"description\":\"Property value.\"}"}}'
+              required:
+              - name
+              - price
+          description: 'Canonical outbound HTTP request definition. Design your API endpoints to return only the data the
+            agent needs for each operation. Oversized responses (e.g., returning thousands of records when only a few are
+            relevant) degrade agent response quality and may exceed processing limits. Use pagination parameters, filters,
+            or result limits in your request definition to keep response sizes manageable.
+
+            '
+          allOf:
+          - $ref: '#/components/schemas/BizAIOmniChannelConnectorToolRequestDefinition'
+        user_auth_required:
+          type: boolean
+          example: false
+          description: 'If `true`, Meta Business Agent injects stored user auth into the outbound request at runtime using
+            the connector''s user-auth injection config.
+
+            '
+        user_auth_action_config:
+          nullable: true
+          example:
+            user_action_tool_type: auth
+            user_auth_token_path: data.access_token
+            refresh_token_path: data.refresh_token
+            expires_at_path: data.expires_at
+            expires_at_type: absolute
+          description: 'Response extraction config for login/refresh user-auth actions.
+
+            '
+          allOf:
+          - $ref: '#/components/schemas/BizAIOmniChannelConnectorToolUserAuthToolConfig'
+        transformation_spec:
+          nullable: true
+          example:
+            version: 1
+            steps:
+            - kind: math
+              target: items[*]
+              params: '{"output_field":"price_display","output_format":"string","expr":{"op":"divide","rounding":"up","operands":[{"field":"price.single_value"},{"literal":100000}]}}'
+            - kind: allowlist
+              params: '{"paths":["items.item_id","items.title","items.price"],"wildcards":["*_display"]}'
+          description: 'Optional declarative transformation applied to this tool''s response before it reaches the agent.
+            Use it to reshape oversized or awkward API responses — convert numeric formats, provide fallbacks, decorate outbound
+            links, and prune to only the fields the agent needs. Omit or set to `null` for no transformation.
+
+            '
+          allOf:
+          - $ref: '#/components/schemas/BizAIOmniChannelConnectorToolTransformationSpec'
+      required:
+      - name
+      - description
+      - request_definition
+      - user_auth_required
+    BizAIOmniChannelConnectorToolUserAuthActionConfig:
+      type: object
+      properties:
+        user_action_tool_type:
+          type: string
+          enum:
+          - auth
+          - refresh
+          example: auth
+          description: 'Type of user auth action: auth performs the initial user authorization, while refresh uses an existing
+            refresh token.'
+        user_auth_token_path:
+          type: string
+          example: data.access_token
+          description: 'Dot-path used to extract the access token from a login/refresh tool response.
+
+            '
+        refresh_token_path:
+          type: string
+          nullable: true
+          example: data.refresh_token
+          description: 'Dot-path used to extract the refresh token from a login/refresh tool response.
+
+            '
+        expires_at_path:
+          type: string
+          nullable: true
+          example: data.expires_at
+          description: 'Dot-path used to extract token expiry from a login/refresh tool response.
+
+            '
+        expires_at_type:
+          type: string
+          nullable: true
+          enum:
+          - absolute
+          - relative_seconds
+          example: absolute
+          description: 'How to interpret the value found at `expires_at_path`.
+
+            '
+      required:
+      - user_action_tool_type
+      - user_auth_token_path
+    BizAIOmniChannelConnectorToolResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 'pfbid02Wd6Qn3ZtR8mC4xV7yGhK9sJbF1pAuL5eToPl
+
+            '
+          description: 'The unique identifier for this tool. Pass this value unchanged as the `tool_id` path parameter to
+            read, update, delete, or run the tool.
+
+            '
+        name:
+          type: string
+          example: check_order_status
+          description: 'Stable tool/action key, visible to the agent.
+
+            '
+        description:
+          type: string
+          example: 'Use this tool when a customer asks about the status of an existing order. Requires an order ID. Returns
+            the order status, estimated delivery date, and tracking information.
+
+            '
+          description: Human-readable tool description.
+        request_definition:
+          example:
+            method: POST
+            path: /items
+            path_parameters: {}
+            query_parameters: {}
+            headers: {}
+            body:
+              content_type: application/json
+              params:
+                name:
+                  type: string
+                  description: Item name.
+                price:
+                  type: integer
+                  description: Item price in cents.
+                properties:
+                  type: array
+                  description: Custom item properties.
+                  items: '{"type":"object","description":"Key-value item property.","required":["key","value"],"properties":{"key":"{\"type\":\"string\",\"description\":\"Property
+                    key.\"}","value":"{\"type\":\"string\",\"description\":\"Property value.\"}"}}'
+              required:
+              - name
+              - price
+          description: 'Roundtripped outbound HTTP request definition.
+
+            '
+          allOf:
+          - $ref: '#/components/schemas/BizAIOmniChannelConnectorToolRequestDefinition'
+        user_auth_required:
+          type: boolean
+          example: false
+          description: 'Whether Meta Business Agent injects stored user auth into the outbound request at runtime.
+
+            '
+        user_auth_action_config:
+          nullable: true
+          example:
+            user_action_tool_type: auth
+            user_auth_token_path: data.access_token
+            refresh_token_path: data.refresh_token
+            expires_at_path: data.expires_at
+            expires_at_type: absolute
+          description: 'Response extraction config for login/refresh user-auth actions.
+
+            '
+          allOf:
+          - $ref: '#/components/schemas/BizAIOmniChannelConnectorToolUserAuthActionConfig'
+        transformation_spec:
+          nullable: true
+          example:
+            version: 1
+            steps:
+            - kind: math
+              target: items[*]
+              params: '{"output_field":"price_display","output_format":"string","expr":{"op":"divide","rounding":"up","operands":[{"field":"price.single_value"},{"literal":100000}]}}'
+            - kind: allowlist
+              params: '{"paths":["items.item_id","items.title","items.price"],"wildcards":["*_display"]}'
+          description: 'Roundtripped declarative transformation applied to this tool''s response before it reaches the agent.
+            Present only when a transformation is configured.
+
+            '
+          allOf:
+          - $ref: '#/components/schemas/BizAIOmniChannelConnectorToolTransformationSpec'
+      required:
+      - id
+      - name
+      - description
+      - request_definition
+      - user_auth_required
+    StandardError:
+      type: object
+      properties:
+        title:
+          type: string
+        detail:
+          type: string
+        type:
+          type: string
+        status:
+          type: integer
+      required:
+      - title
+      - detail
+    BizAIOmniChannelConnectorToolRunRequest:
+      type: object
+      properties:
+        input:
+          type: string
+          example: '{"query": "search for product"}'
+          description: 'JSON-encoded input payload for the tool action. Defaults to empty object if not provided.
+
+            '
+    BizAIOmniChannelConnectorToolRunResponse:
+      type: object
+      properties:
+        output:
+          type: string
+          example: '{"results": []}'
+          description: 'JSON-encoded response from the tool execution
+
+            '
+        status:
+          type: string
+          example: SUCCESS
+          description: 'Execution status: success or error'
+      required:
+      - output
+      - status
+  securitySchemes:
+    OAuthToken__Authorization:
+      type: http
+      scheme: bearer

@@ -1,0 +1,143 @@
+# Post-purchase support agent for an online store.
+# Fill in every TODO, then run `mba plan`. See templates/post-purchase/README.md.
+version: 1
+
+settings:
+  ai_audience: ALLOWLISTED_ONLY      # widen to EVERYONE only after evals pass
+  handoff:
+    enabled: true
+    message_selection: AGENT
+  followup:
+    enabled: true
+    followup_interval_in_seconds: 900
+    message: Is there anything else I can help you with on your order?
+  never_say_phrases:
+    - guaranteed delivery
+    - full refund guaranteed
+
+business_info:
+  business_description: TODO one or two sentences on what the store sells.
+  return_policy: TODO e.g. Unworn items can be returned within 30 days of delivery for a refund to the original payment method.
+  delivery_and_shipping: TODO carriers, regions, standard and express delivery times.
+  payment_method: TODO accepted payment methods.
+  contact_info:
+    email: TODO support@example.com
+    hours_of_operation: TODO Mon-Fri 9am-6pm
+
+skills:
+  - title: order-status
+    description: Apply when a customer asks where their order is, when it will arrive, or about tracking.
+    skill_file: skills/order-status.md
+  - title: returns-and-exchanges
+    description: Apply when a customer wants to return or exchange an item, or asks whether something can be returned.
+    skill_file: skills/returns-and-exchanges.md
+  - title: refund-status
+    description: Apply when a customer asks about a refund they were promised or already requested.
+    skill_file: skills/refund-status.md
+  - title: problems-and-handoff
+    description: Apply when an item arrived damaged, wrong or missing, when a delivery failed, or when the customer is upset or asks for a person.
+    skill_file: skills/problems-and-handoff.md
+
+faqs_file: faqs.yaml
+
+websites:
+  - url: https://TODO.example.com/help
+
+allowlist:
+  - "+15555550100"   # TODO your own test phone numbers
+
+connectors:
+  - name: store_orders_api
+    description: Looks up a customer's orders and shipments, starts returns, and reports refund status.
+    # Your order API's base URL. If you don't have one yet, run the mock backend and
+    # `cloudflared tunnel --url http://localhost:8080`, then use
+    # https://<random-name>.trycloudflare.com/api/v1 here (see the template README).
+    base_url: https://TODO.trycloudflare.com/api/v1
+    auth_type: API_KEY
+    auth_config:
+      api_key:
+        headers:
+          - field_name: X-API-Key
+            value: ${ORDERS_API_KEY}
+    tools:
+      - name: get_order
+        description: >-
+          Returns an order with its items, status, carrier, tracking number and estimated delivery date.
+          Call this before answering any question about a specific order. If the customer has not given an
+          order number, call list_orders first.
+        user_auth_required: false
+        request_definition:
+          method: GET
+          path: /orders/{order_number}
+          path_parameters:
+            order_number:
+              type: string
+              description: The order number as the customer gave it or as returned by list_orders, for example 1001.
+          query_parameters:
+            customer_phone:
+              type: string
+              description: The customer's WhatsApp phone number, used to confirm the order belongs to them.
+              required: true
+              binding:
+                kind: macro
+                macro: WHATSAPP_PHONE_NUMBER
+      - name: list_orders
+        description: Returns the customer's recent orders (number, date, status). Use it when they did not give an order number.
+        user_auth_required: false
+        request_definition:
+          method: GET
+          path: /orders
+          query_parameters:
+            customer_phone:
+              type: string
+              description: The customer's WhatsApp phone number.
+              required: true
+              binding:
+                kind: macro
+                macro: WHATSAPP_PHONE_NUMBER
+      - name: create_return
+        description: >-
+          Starts a return for items on an order. Only call it after get_order shows the items are returnable
+          and the customer has confirmed which items and the reason.
+        user_auth_required: false
+        request_definition:
+          method: POST
+          path: /orders/{order_number}/returns
+          path_parameters:
+            order_number:
+              type: string
+              description: The order number, as confirmed by get_order.
+          body:
+            content_type: application/json
+            params:
+              item_ids:
+                type: string
+                description: Comma-separated item IDs from get_order. Never guess these.
+              reason:
+                type: string
+                description: The customer's reason, in a few words.
+              customer_phone:
+                type: string
+                description: The customer's WhatsApp phone number.
+                binding:
+                  kind: macro
+                  macro: WHATSAPP_PHONE_NUMBER
+            required: [item_ids, reason, customer_phone]
+      - name: get_refund_status
+        description: Returns the status and amount of refunds on an order. Call it when the customer asks about a refund.
+        user_auth_required: false
+        request_definition:
+          method: GET
+          path: /orders/{order_number}/refunds
+          path_parameters:
+            order_number:
+              type: string
+              description: The order number.
+          query_parameters:
+            customer_phone:
+              type: string
+              description: The customer's WhatsApp phone number.
+              required: true
+              binding:
+                kind: macro
+                macro: WHATSAPP_PHONE_NUMBER

@@ -1,0 +1,12 @@
+# Secrets and local state
+.env
+.mba/
+.venv/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+# A business's working config, created by `mba init` / `mba pull` in this folder
+/agent.yaml
+/faqs.yaml
+/skills/
+/evals/

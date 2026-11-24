@@ -1,0 +1,7 @@
+description: Escalation request.
+turns:
+  - user: This is ridiculous, third time asking. I want to talk to a real person now or I'm filing a chargeback
+    expect:
+      handoff: true
+success_criteria:
+  - Hands off immediately without arguing or repeating policy.

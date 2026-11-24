@@ -1,0 +1,484 @@
+openapi: 3.1.1
+info:
+  title: Agent Settings
+  summary: 'Manage AI agent settings for a specific entity (WhatsApp Business Phone Number).
+
+    '
+  version: 2.0.0
+  description: 'This endpoint manages the core operational settings for the AI agent on a specific entity (WhatsApp Business
+    Phone Number ID), such as its active status and policies for handoff and followup. The resource is a singleton — one settings
+    object per entity_id. Uses GET to retrieve and PUT to create or update (partial update — any field you omit retains its
+    current value; PUT is retained for backward compatibility).
+
+
+    Set up billing before you turn your agent on — Meta Business Agent messages are not delivered unless your Business Agent
+    account has a payment method attached. Turning the agent on with `ai_audience` set to `ALLOWLISTED_ONLY` does not require
+    a payment method, so you can test with allowlisted consumers before you set up billing. See [Billing for Meta Business
+    Agent messages](https://developers.facebook.com/documentation/business-messaging/whatsapp/pricing/non-template-messages#billing-for-meta-business-agent-messages).
+
+
+    **Rate limit.** Each operation is rate limited separately for each app and `entity_id` pair, to 1,000 requests per hour.
+    Once a limit is exhausted, further requests return `429` until the limit resets.'
+  license:
+    name: Meta Business AI Terms of Service
+    url: 'https://www.facebook.com/legal/3774714022740775
+
+      '
+servers:
+- url: https://api.facebook.com/{entity_id}/agent_config/settings
+tags:
+- name: Agent Config
+  description: Agent configuration and settings
+- name: Business AI
+  description: Business AI API operations
+paths:
+  /:
+    get:
+      operationId: getSettings
+      description: 'Retrieve the current AI settings for the specified entity.
+
+        '
+      summary: Get AI agent settings
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID, Instagram business account ID, or Instagram username for the
+          Meta Business Agent.
+
+          '
+      - name: agent_id
+        in: query
+        required: false
+        schema:
+          type: string
+          example: '1234567890'
+        description: 'Optional agent ID. When provided, returns the specific agent configuration. When absent, returns all
+          settings for the given channel.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        200:
+          description: The AI settings for the entity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BizAIOmniChannelSettingsResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                FORBIDDEN:
+                  value:
+                    title: Forbidden
+                    detail: 'The caller is not authorized to access this entity
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Agent Config
+      - Business AI
+    put:
+      operationId: updateSettings
+      description: 'Create or update the AI settings for the specified entity. Send only the fields you want to change — any
+        field you omit keeps its current value (partial update; PUT is retained for backward compatibility). Note that disabling
+        the agent will make the AI stop responding to all threads. Re-enabling it will make the AI start responding to new
+        threads only. Enabling the agent requires a payment method on your Business Agent account, unless `ai_audience` is
+        `ALLOWLISTED_ONLY`: an allowlisted-only agent responds only to consumers on the channel allowlist, so you can turn
+        it on and test before you set up billing. Expanding `ai_audience` to `EVERYONE` afterwards does require a payment
+        method.'
+      summary: Update AI agent settings
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID, Instagram business account ID, or Instagram username for the
+          Meta Business Agent.
+
+          '
+      - name: agent_id
+        in: query
+        required: false
+        schema:
+          type: string
+          example: '1234567890'
+        description: 'Optional agent ID. When provided, updates the specific agent configuration. When absent, uses create-or-fetch
+          behavior.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BizAIOmniChannelSettingsRequest'
+      responses:
+        200:
+          description: The updated AI settings for the entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIOmniChannelSettingsResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                FORBIDDEN:
+                  value:
+                    title: Forbidden
+                    detail: 'The caller is not authorized to access this entity
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Agent Config
+      - Business AI
+security:
+- OAuthToken__Authorization: []
+components:
+  schemas:
+    BizAIOmniChannelSettingsRollout:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          example: true
+          description: 'Whether the AI agent is currently enabled. true for on, false for off
+
+            '
+      required:
+      - enabled
+    BizAIOmniChannelSettingsHandoff:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          example: true
+          description: 'Controls whether the agent will release thread control after sending a handoff message. true = agent
+            will release control, false = agent will not release control.
+
+            '
+        message:
+          type: string
+          example: Connecting you to a human agent
+          description: 'The message displayed to the user when a handoff to a human agent occurs
+
+            '
+        message_selection:
+          type: string
+          enum:
+          - DEFAULT
+          - AGENT
+          - CUSTOM
+          example: CUSTOM
+          description: 'Controls the source of the consumer-facing handoff message. CUSTOM: the business supplies its own
+            handoff message. AGENT: the AI agent composes a handoff message for each conversation. DEFAULT: a fixed, standard
+            handoff message is used.'
+      required:
+      - enabled
+    BizAIOmniChannelSettingsFollowup:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          example: true
+          description: 'Whether followup is enabled. true to enable, false to disable
+
+            '
+        followup_interval_in_seconds:
+          type: integer
+          enum:
+          - 0
+          - 300
+          - 900
+          - 1800
+          - 3600
+          - 7200
+          - 28800
+          - 86400
+          example: 900
+          description: 'The time in seconds of user inactivity before the followup message is sent. Setting to 0 will disable
+            followup
+
+            '
+        message:
+          type: string
+          example: Is there anything else I can help with?
+          description: 'The message sent to follow up with the user after inactivity
+
+            '
+      required:
+      - enabled
+    BizAIOmniChannelSettingsResponse:
+      type: object
+      properties:
+        agent_id:
+          type: string
+          example: '1234567890'
+          description: 'Unique identifier for this agent configuration. Use this ID to target a specific agent in update or
+            delete operations
+
+            '
+        channel:
+          type: string
+          enum:
+          - email
+          - instagram
+          - line
+          - messenger
+          - sms
+          - tiktok
+          - unknown
+          - webchat
+          - whatsapp
+          example: whatsapp
+          description: 'The channel/platform these settings apply to
+
+            '
+        rollout:
+          description: 'Rollout configuration for the AI agent, containing the enabled flag and future gradual rollout fields
+
+            '
+          allOf:
+          - $ref: '#/components/schemas/BizAIOmniChannelSettingsRollout'
+        handoff:
+          nullable: true
+          description: 'Settings for handing over the conversation to a human agent. Null if not configured
+
+            '
+          allOf:
+          - $ref: '#/components/schemas/BizAIOmniChannelSettingsHandoff'
+        followup:
+          nullable: true
+          description: 'Settings for following up with an inactive user. Null if not configured
+
+            '
+          allOf:
+          - $ref: '#/components/schemas/BizAIOmniChannelSettingsFollowup'
+        ai_audience:
+          type: string
+          nullable: true
+          enum:
+          - ALLOWLISTED_ONLY
+          - EVERYONE
+          example: EVERYONE
+          description: 'Controls which consumers the AI agent responds to. EVERYONE = all consumers (default), ALLOWLISTED_ONLY
+            = only consumers in the channel allowlist. Null for unsupported channel entities.
+
+            '
+      required:
+      - agent_id
+      - channel
+      - rollout
+    StandardError:
+      type: object
+      properties:
+        title:
+          type: string
+        detail:
+          type: string
+        type:
+          type: string
+        status:
+          type: integer
+      required:
+      - title
+      - detail
+    BizAIOmniChannelSettingsRequest:
+      type: object
+      properties:
+        rollout:
+          description: 'Rollout configuration for the AI agent, containing the enabled flag and future gradual rollout fields
+
+            '
+          allOf:
+          - $ref: '#/components/schemas/BizAIOmniChannelSettingsRollout'
+        handoff:
+          description: 'Settings for handing over the conversation to a human agent
+
+            '
+          allOf:
+          - $ref: '#/components/schemas/BizAIOmniChannelSettingsHandoff'
+        followup:
+          description: 'Settings for following up with an inactive user in conversation
+
+            '
+          allOf:
+          - $ref: '#/components/schemas/BizAIOmniChannelSettingsFollowup'
+        ai_audience:
+          type: string
+          enum:
+          - ALLOWLISTED_ONLY
+          - EVERYONE
+          example: EVERYONE
+          description: 'Controls which consumers the AI agent responds to. EVERYONE = all consumers (default), ALLOWLISTED_ONLY
+            = only consumers in the channel allowlist. Supported for WhatsApp and Instagram entities.
+
+            '
+        never_say_phrases:
+          type: array
+          nullable: true
+          example: guaranteed returns
+          items:
+            type: string
+          description: 'Exact phrases the AI agent must never include in a response. Each turn is checked against this list
+            and a matching response is withheld. Provide the full replacement list; omit to leave the current list unchanged,
+            or send an empty list to clear it.
+
+            '
+  securitySchemes:
+    OAuthToken__Authorization:
+      type: http
+      scheme: bearer

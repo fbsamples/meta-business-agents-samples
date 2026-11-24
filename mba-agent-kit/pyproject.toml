@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mba-agent-kit"
+version = "0.1.0"
+description = "Configure a Meta Business Agent from agent.yaml, with a CLI built for people and coding agents."
+requires-python = ">=3.9"
+dependencies = ["requests>=2.25", "PyYAML>=5.4"]
+
+[project.optional-dependencies]
+validate = ["jsonschema>=4"]
+dev = ["pytest>=7", "jsonschema>=4"]
+
+[project.scripts]
+mba = "mba.cli:main"
+
+[tool.setuptools]
+packages = ["mba"]

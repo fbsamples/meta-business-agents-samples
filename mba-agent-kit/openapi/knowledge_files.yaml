@@ -1,0 +1,560 @@
+openapi: 3.1.1
+info:
+  title: Agent Knowledge - Files
+  summary: 'Manage file-based knowledge sources for the AI agent on a specific entity.
+
+    '
+  version: 2.0.0
+  description: 'This endpoint provides operations for managing file-based knowledge sources in the AI agent knowledge base
+    for a specific entity. Files such as PDFs, text documents, or other supported formats can be uploaded to supplement the
+    agent''s knowledge. Supports uploading, listing, retrieving, and deleting files. Each operation is rate limited separately
+    for each app and `entity_id` pair, to 1,000 requests per hour. Once a limit is exhausted, further requests return `429`
+    until the limit resets.
+
+    '
+  license:
+    name: Meta Business AI Terms of Service
+    url: 'https://www.facebook.com/legal/3774714022740775
+
+      '
+servers:
+- url: https://api.facebook.com/{entity_id}/agent_config/files
+tags:
+- name: Business AI
+  description: Business AI API operations
+- name: Knowledge
+  description: Knowledge base management
+paths:
+  /:
+    get:
+      operationId: listKnowledgeFiles
+      description: 'Retrieve every file in the agent''s knowledge base for the specified entity. Each entry returns the file''s
+        identifier and name, not its contents.
+
+        '
+      summary: List knowledge files
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID or Instagram business account ID for the Meta Business Agent.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        200:
+          description: A list of all knowledge base files
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BizAIOmniChannelKnowledgeFileResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Knowledge
+    post:
+      operationId: uploadKnowledgeFile
+      description: 'Upload a document to the agent''s knowledge base. Use files for unstructured reference material that is
+        too long or too varied to express as FAQ entries, such as product guides, policy documents, and price lists. The agent
+        draws on file contents when no FAQ entry matches the customer''s question. See the `file` field for the supported
+        formats and the maximum file size.
+
+        '
+      summary: Upload a knowledge file
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID or Instagram business account ID for the Meta Business Agent.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BizAIOmniChannelKnowledgeFileRequest'
+      responses:
+        201:
+          description: The newly uploaded file metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIOmniChannelKnowledgeFileResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        409:
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                CONFLICT:
+                  value:
+                    title: Conflict
+                    detail: 'The file conflicts with an existing file or with an upload already in progress.
+
+                      '
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        503:
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                SERVICE_UNAVAILABLE:
+                  value:
+                    title: Service Unavailable
+                    detail: 'The file upload service is temporarily unavailable. Please retry.
+
+                      '
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Knowledge
+  /{file_id}:
+    get:
+      operationId: getKnowledgeFile
+      description: 'Retrieve a single knowledge base file entry by its ID. Returns the file''s identifier and name, not its
+        contents.
+
+        '
+      summary: Get a knowledge file
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID or Instagram business account ID for the Meta Business Agent.
+
+          '
+      - name: file_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: 'pfbid02Fn8Km3PqY7nT5bX9zWcR4dJgH1sAuV6eBoNl
+
+            '
+        description: 'The identifier of the file, as returned in the `id` field when the file was uploaded or listed. Pass
+          that value through unchanged.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        200:
+          description: The requested file metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIOmniChannelKnowledgeFileResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Knowledge
+    delete:
+      operationId: deleteKnowledgeFile
+      description: 'Delete a file from the knowledge base by its ID. The agent stops drawing on its contents. Other knowledge
+        sources for the entity are unaffected.
+
+        '
+      summary: Delete a knowledge file
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID or Instagram business account ID for the Meta Business Agent.
+
+          '
+      - name: file_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: 'pfbid02Fn8Km3PqY7nT5bX9zWcR4dJgH1sAuV6eBoNl
+
+            '
+        description: 'The identifier of the file, as returned in the `id` field when the file was uploaded or listed. Pass
+          that value through unchanged.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        204:
+          description: File successfully deleted
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Knowledge
+security:
+- OAuthToken__Authorization: []
+components:
+  schemas:
+    BizAIOmniChannelKnowledgeFileRequest:
+      type: object
+      properties:
+        file_name:
+          type: string
+          example: product-guide.pdf
+          description: 'The name of the file being uploaded.
+
+
+            Include the file extension. The extension must match the content of the uploaded file, and it selects the type
+            for file formats that cannot be identified from their content, such as .csv, .doc, .docx, and .xlsx. A request
+            whose extension contradicts the uploaded content is rejected, and so is a request whose extension names an unsupported
+            type.
+
+
+            If you omit the extension and the content identifies the format, the response returns the name with the matching
+            extension added. Use the returned name when you read or delete the file.'
+        file:
+          type: string
+          description: 'The file to be uploaded. The content is checked against the extension declared in file_name.
+
+
+            Maximum file size: 100000000 bytes.
+
+
+            Supported file types:
+
+            - .pdf
+
+            - .doc
+
+            - .docx
+
+            - .png
+
+            - .jpg
+
+            - .jpeg
+
+            - .csv, when CSV extraction is enabled for the WhatsApp asset
+
+            - .xlsx, when XLSX extraction is enabled for the WhatsApp asset'
+          format: binary
+      required:
+      - file_name
+      - file
+    BizAIOmniChannelKnowledgeFileResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 'pfbid02Fn8Km3PqY7nT5bX9zWcR4dJgH1sAuV6eBoNl
+
+            '
+          description: 'The unique identifier for this file. Pass this value unchanged as the `file_id` path parameter to
+            read or delete the file.
+
+            '
+        file_name:
+          type: string
+          example: product-guide.pdf
+          description: The name of the file
+      required:
+      - id
+      - file_name
+    StandardError:
+      type: object
+      properties:
+        title:
+          type: string
+        detail:
+          type: string
+        type:
+          type: string
+        status:
+          type: integer
+      required:
+      - title
+      - detail
+  securitySchemes:
+    OAuthToken__Authorization:
+      type: http
+      scheme: bearer

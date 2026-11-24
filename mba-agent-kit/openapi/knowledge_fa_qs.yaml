@@ -1,0 +1,678 @@
+openapi: 3.1.1
+info:
+  title: Agent Knowledge - FAQs
+  summary: 'Manage FAQ entries in the AI agent knowledge base for a specific entity.
+
+    '
+  version: 2.0.0
+  description: 'This endpoint provides CRUD operations for managing FAQ entries in the AI agent knowledge base for a specific
+    entity. FAQs are question-answer pairs that the agent references when responding to customer queries. Each FAQ entry has
+    a `question`, an `answer`, and optional key-value `metadata`. Responses also carry the entry''s `id` and its creation
+    timestamp. For best results, keep FAQs focused and concise. Each entry should address a single, specific question. Adding
+    too many FAQs (generally beyond a few hundred) can degrade the agent''s ability to find the right answer. Prioritize the
+    questions your customers ask most frequently and keep answers factual and direct. Each operation is rate limited separately
+    for each app and `entity_id` pair, to 1,000 requests per hour. Once a limit is exhausted, further requests return `429`
+    until the limit resets.
+
+    '
+  license:
+    name: Meta Business AI Terms of Service
+    url: 'https://www.facebook.com/legal/3774714022740775
+
+      '
+servers:
+- url: https://api.facebook.com/{entity_id}/agent_config/faq
+tags:
+- name: Business AI
+  description: Business AI API operations
+- name: Knowledge
+  description: Knowledge base management
+paths:
+  /:
+    get:
+      operationId: listFAQs
+      description: 'Retrieve every FAQ entry configured for the specified entity.
+
+        '
+      summary: List FAQs
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID, Instagram business account ID, or Instagram username for the
+          Meta Business Agent.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        200:
+          description: A list of all FAQ entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BizAIOmniChannelKnowledgeFAQResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Knowledge
+    post:
+      operationId: createFAQ
+      description: 'Create an FAQ entry: a question-and-answer pair the agent can use to answer a specific customer question.
+        FAQs are the most direct way to control how the agent answers a known question. The agent retrieves each entry independently
+        and answers from it, rather than inferring an answer from your other knowledge sources.'
+      summary: Create an FAQ
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID, Instagram business account ID, or Instagram username for the
+          Meta Business Agent.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BizAIOmniChannelKnowledgeFAQRequest'
+      responses:
+        201:
+          description: The newly created FAQ entry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIOmniChannelKnowledgeFAQResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        409:
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                CONFLICT:
+                  value:
+                    title: Duplicate FAQ
+                    detail: 'A FAQ with the same question already exists.
+
+                      '
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Knowledge
+  /{faq_id}:
+    get:
+      operationId: getFAQ
+      description: 'Retrieve a single FAQ entry by its ID, including its question, its answer, and any metadata stored with
+        it.
+
+        '
+      summary: Get an FAQ
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID, Instagram business account ID, or Instagram username for the
+          Meta Business Agent.
+
+          '
+      - name: faq_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: 'pfbid02Fq7Bn5XwS3tM9yV4zLcJ8dKgA6pHuR1eNaQl
+
+            '
+        description: 'The identifier of the FAQ entry, as returned in the `id` field when the entry was created, last updated,
+          or listed. Pass that value through unchanged.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        200:
+          description: The requested FAQ entry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIOmniChannelKnowledgeFAQResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Knowledge
+    put:
+      operationId: updateFAQ
+      description: 'Update an FAQ entry by its ID. Rewording the `question` changes which customer messages the entry is matched
+        against; rewording the `answer` changes what the agent replies. For a WhatsApp Business phone number, an update can
+        give the entry a new ID, so use the `id` in the response for later calls.
+
+        '
+      summary: Update an FAQ
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID, Instagram business account ID, or Instagram username for the
+          Meta Business Agent.
+
+          '
+      - name: faq_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: 'pfbid02Fq7Bn5XwS3tM9yV4zLcJ8dKgA6pHuR1eNaQl
+
+            '
+        description: 'The identifier of the FAQ entry, as returned in the `id` field when the entry was created, last updated,
+          or listed. Pass that value through unchanged.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BizAIOmniChannelKnowledgeFAQRequest'
+      responses:
+        200:
+          description: The updated FAQ entry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIOmniChannelKnowledgeFAQResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: FAQ not found
+                    detail: 'No FAQ with this ID exists for this entity.
+
+                      '
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Knowledge
+    delete:
+      operationId: deleteFAQ
+      description: 'Delete an FAQ entry by its ID. The agent stops answering from it. Other knowledge sources for the entity
+        are unaffected. A 404 with the title `FAQ not found` means no entry with this ID exists for this entity, for example
+        because it was already deleted.
+
+        '
+      summary: Delete an FAQ
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID, Instagram business account ID, or Instagram username for the
+          Meta Business Agent.
+
+          '
+      - name: faq_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: 'pfbid02Fq7Bn5XwS3tM9yV4zLcJ8dKgA6pHuR1eNaQl
+
+            '
+        description: 'The identifier of the FAQ entry, as returned in the `id` field when the entry was created, last updated,
+          or listed. Pass that value through unchanged.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        204:
+          description: FAQ entry successfully deleted
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: FAQ not found
+                    detail: 'No FAQ with this ID exists for this entity.
+
+                      '
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+      - Knowledge
+security:
+- OAuthToken__Authorization: []
+components:
+  schemas:
+    BizAIOmniChannelKnowledgeFAQRequest:
+      type: object
+      properties:
+        question:
+          type: string
+          example: What is your return policy?
+          description: 'The FAQ question text. Write it as a natural question a customer would ask. Each FAQ should address
+            a single, specific topic. For example, use "What is your return policy?" rather than "Returns, exchanges, and
+            refunds" — the agent matches questions more accurately when they mirror how customers phrase them.
+
+            '
+        answer:
+          type: string
+          example: 'We offer a 30-day return policy for unused items in their original packaging. To start a return, visit
+            your order history and select the item you want to return. Refunds are processed within 5-7 business days.
+
+            '
+          description: 'The FAQ answer text. Keep answers factual, concise, and self-contained. Include all the information
+            needed to fully answer the question without requiring the customer to ask follow-ups. Avoid referencing other
+            FAQ entries — the agent retrieves each entry independently.
+
+            '
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+          description: 'Key-value metadata associated with this FAQ entry
+
+            '
+      required:
+      - question
+      - answer
+    BizAIOmniChannelKnowledgeFAQResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 'pfbid02Fq7Bn5XwS3tM9yV4zLcJ8dKgA6pHuR1eNaQl
+
+            '
+          description: 'The unique identifier for this FAQ entry. Pass this value unchanged as the `faq_id` path parameter
+            to read, update, or delete the entry. For a WhatsApp Business phone number, an update can change it: after an
+            update, use the `id` the update returned.'
+        question:
+          type: string
+          example: What is your return policy?
+          description: The FAQ question text
+        answer:
+          type: string
+          example: 'We offer a 30-day return policy for unused items
+
+            '
+          description: The FAQ answer text
+        created_at:
+          type: integer
+          example: 1714500000
+          description: 'The timestamp when the FAQ was created. An update that gives the entry a new `id` sets it to the time
+            of that update.
+
+            '
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+          description: 'Key-value metadata associated with this FAQ entry
+
+            '
+      required:
+      - id
+      - question
+      - answer
+    StandardError:
+      type: object
+      properties:
+        title:
+          type: string
+        detail:
+          type: string
+        type:
+          type: string
+        status:
+          type: integer
+      required:
+      - title
+      - detail
+  securitySchemes:
+    OAuthToken__Authorization:
+      type: http
+      scheme: bearer

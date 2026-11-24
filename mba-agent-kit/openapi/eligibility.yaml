@@ -1,0 +1,200 @@
+openapi: 3.1.1
+info:
+  title: Agent Eligibility
+  summary: 'Check whether a WhatsApp or Instagram business entity is eligible for the business AI agent.
+
+    '
+  version: 2.0.0
+  description: 'This endpoint reports whether the business AI agent can be enabled for a WhatsApp Business Phone Number or
+    Instagram business account. The resource is a singleton — one eligibility result per entity_id.
+
+    '
+  license:
+    name: Meta Business AI Terms of Service
+    url: 'https://www.facebook.com/legal/3774714022740775
+
+      '
+servers:
+- url: https://api.facebook.com/{entity_id}/agent_eligibility
+tags:
+- name: Business AI
+  description: Business AI API operations
+paths:
+  /:
+    get:
+      operationId: getAgentEligibility
+      description: 'Check whether the business AI agent can be enabled for a specific WhatsApp Business phone number or Instagram
+        business account. Call this before onboarding, so an entity that cannot use the agent fails fast instead of erroring
+        partway through setup.
+
+
+        For WhatsApp, pass the Business Phone Number ID as `entity_id`. For Instagram, pass the business account ID or username
+        without the leading `@`.
+
+
+        **Check the version header.** Send the `X-API-Version` value shown under Header Parameters below. It does not necessarily
+        match the version used by other Meta Business Agent Platform APIs, so do not reuse a single shared header value across
+        every call.
+
+
+        **When to check.** Use this endpoint to confirm an entity can use the agent before opening its channel management
+        interface. For example, to filter a large set of accounts before onboarding them, to build a self-serve flow where
+        a business connects its own account, or to diagnose why agent onboarding is unavailable for an account.
+
+
+        **Interpreting the result.** The response contains `is_eligible`. When it is `false`, the response also contains `ineligibility_reason`,
+        a readable explanation. The reason is display text, not a stable code; do not branch on its wording.
+
+
+        - `is_eligible: true` — the entity can use the agent. Continue with onboarding, then apply agent settings.
+
+        - `is_eligible: false` — the entity cannot use the agent. Read `ineligibility_reason` for an explanation, then check
+        the eligibility criteria for its messaging channel.
+
+
+        Eligibility is not permanent. It can change when a business updates its category, or when its standing changes, so
+        re-check an entity rather than caching the result indefinitely.
+
+
+        **An error is not a negative answer.** A `401`, `404`, or `429` means the request could not be evaluated. Do not treat
+        a failed request as "not eligible".
+
+
+        **Rate limit.** This endpoint allows 1,000 requests per hour for each app and `entity_id` pair. Once that is exhausted,
+        further requests return `429` until the limit resets. Eligibility changes slowly, so reuse the result for a while
+        rather than re-checking an entity on every call.'
+      summary: Get agent eligibility
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID, Instagram business account ID, or Instagram username to check
+          eligibility for.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        200:
+          description: 'Response containing the eligibility result for the entity
+
+            '
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIOmniChannelEligibilityResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Business AI
+security:
+- OAuthToken__Authorization: []
+components:
+  schemas:
+    BizAIOmniChannelEligibilityResponse:
+      type: object
+      properties:
+        is_eligible:
+          type: boolean
+          example: true
+          description: 'Whether the entity is eligible for the business AI agent. true for eligible, false for not eligible
+
+            '
+        ineligibility_reason:
+          type: string
+          example: 'This business category is not supported by Meta Business Agent.
+
+            '
+          description: 'A readable explanation of why the entity cannot use Meta Business Agent. Omitted when is_eligible
+            is true. This text is for display and can change; do not use it as a reason code.
+
+            '
+      required:
+      - is_eligible
+    StandardError:
+      type: object
+      properties:
+        title:
+          type: string
+        detail:
+          type: string
+        type:
+          type: string
+        status:
+          type: integer
+      required:
+      - title
+      - detail
+  securitySchemes:
+    OAuthToken__Authorization:
+      type: http
+      scheme: bearer

@@ -1,0 +1,8 @@
+description: The return window has passed.
+turns:
+  - user: Can I return the shoes from order 1002?
+    expect:
+      not_contains: ["return has been created", "I've started your return"]
+success_criteria:
+  - Explains the item is outside the return window, citing the policy, in one or two sentences.
+  - Does not make an exception or start a return.

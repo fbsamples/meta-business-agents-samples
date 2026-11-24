@@ -1,0 +1,1781 @@
+openapi: 3.1.1
+info:
+  title: Agent Configuration Versions
+  summary: 'Read the configuration versions of an agent, and set the one it serves.
+
+    '
+  version: 2.0.0
+  description: 'A configuration version is an immutable snapshot of the knowledge an agent serves: its skills, its business
+    information, and its FAQs. Every edit to that knowledge creates a new version, and a phone number serves one version to
+    every customer, except the customers the rules of an A/B experiment send to another: a share of traffic, or the members
+    of a consumer list. These endpoints list the versions a phone number has served, read one of them, read the one it serves
+    now, and set the one it serves. Setting it covers deploying a new version, rolling back to an earlier one, and cloning
+    a configuration from another phone number of the same WhatsApp Business Account. A phone number that has not yet been
+    migrated to versioned configuration returns an empty list. Each operation is rate limited separately for each app and
+    `entity_id` pair, to 1,000 requests per hour. Once a limit is exhausted, further requests return `429` until the limit
+    resets.'
+  license:
+    name: Meta Business AI Terms of Service
+    url: 'https://www.facebook.com/legal/3774714022740775
+
+      '
+servers:
+- url: https://api.facebook.com/{entity_id}/agent_config/versions
+tags:
+- name: Agent Config
+  description: Agent configuration and settings
+- name: Business AI
+  description: Business AI API operations
+paths:
+  /:
+    get:
+      operationId: listConfigVersions
+      description: 'List the configuration versions this phone number has served, newest first. This is an activation history,
+        so a version that was activated, replaced, and activated again appears once for each activation. A version that the
+        phone number rolled past stays in the list and can be made active again. A phone number that has not been migrated
+        to versioned configuration returns an empty list rather than an error.
+
+        '
+      summary: List configuration versions
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID for the Meta Business Agent.
+
+          '
+      - name: before
+        in: query
+        required: false
+        schema:
+          type: string
+        description: 'If specified, a page of data immediately before this cursor will be returned.
+
+          '
+      - name: after
+        in: query
+        required: false
+        schema:
+          type: string
+        description: 'If specified, a page of data immediately after this cursor will be returned.
+
+          '
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 25
+        description: 'This is the maximum number of objects that may be returned. A query may return fewer than the value
+          of limit due to filtering. Do not depend on the number of results being fewer than the limit value to indicate that
+          your query reached the end of the list of data, use the absence of next instead. For example, if you set limit to
+          10 and 9 results are returned, there may be more data available, but one item was removed due to privacy filtering.
+          In all cases, the API returns the correct pagination links.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        200:
+          description: 'A page of configuration versions, newest first
+
+            '
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BizAIOmniChannelConfigVersionSummaryResponse'
+                    description: 'This array represents the page of data returned.
+
+                      '
+                  paging:
+                    type: object
+                    properties:
+                      cursors:
+                        type: object
+                        properties:
+                          before:
+                            type: string
+                            description: 'This is the cursor that points to the start of the page of data that has been returned.
+
+                              '
+                          after:
+                            type: string
+                            description: 'This is the cursor that points to the end of the page of data that has been returned.
+
+                              '
+                        description: Cursors to the next and previous pages
+                      previous:
+                        type: string
+                        description: 'The API that will return the previous page of data. If not included, this is the first
+                          page of data.
+
+                          '
+                      next:
+                        type: string
+                        description: 'The API that will return the next page of data. If not included, this is the last page
+                          of data. Due to how pagination works with visibility and privacy, it is possible that a page may
+                          be empty but contain a next paging link. Stop paging when the next link no longer appears.
+
+                          '
+                    required:
+                    - cursors
+                    description: Pagination metadata
+                required:
+                - data
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                FORBIDDEN:
+                  value:
+                    title: Forbidden
+                    detail: Access denied
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Agent Config
+      - Business AI
+  /active:
+    get:
+      operationId: getActiveConfigVersion
+      description: 'Read the configuration version this phone number serves now, with the version of each kind of knowledge
+        it pins. Returns 404 when the phone number has not been migrated to versioned configuration, so a client polling for
+        migration gets an unambiguous answer.
+
+        '
+      summary: Get the active configuration version
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID for the Meta Business Agent.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        200:
+          description: 'The configuration version the phone number serves
+
+            '
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIOmniChannelConfigVersionResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                FORBIDDEN:
+                  value:
+                    title: Forbidden
+                    detail: Access denied
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Agent Config
+      - Business AI
+    put:
+      operationId: setActiveConfigVersion
+      description: 'Make a configuration version the one this phone number serves. Deploying a new version, rolling back to
+        an earlier one, and cloning a configuration from another phone number of the same WhatsApp Business Account are all
+        this one request. The server tells a rollback from a clone by the history of the phone number, and `reason` optionally
+        labels the move as a `deploy` or a `clone`. The change is atomic: consumers are served either the old version or the
+        new one, never a mixture. The move also ends any A/B experiment: every rule is removed, `consumer_pin` rules included,
+        and every customer is served the new version. Setting the version that is already active changes nothing and leaves
+        the rules as they are: remove them to end an experiment on it. On a phone number that requires review, a version no
+        review approved is refused with 409. Send `expected_active_version_id` to make the change conditional on the version
+        you believe is active.'
+      summary: Set the active configuration version
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID for the Meta Business Agent.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BizAIOmniChannelSetActiveConfigVersionRequest'
+      responses:
+        200:
+          description: 'The configuration version now being served
+
+            '
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIOmniChannelConfigVersionResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                FORBIDDEN:
+                  value:
+                    title: Forbidden
+                    detail: Access denied
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        409:
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                CONFLICT:
+                  value:
+                    title: Conflict
+                    detail: 'The phone number does not serve the expected version.
+
+                      '
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Agent Config
+      - Business AI
+  /pending:
+    get:
+      operationId: getPendingConfigVersion
+      description: 'Read the configuration version held for review on a phone number that requires review, with the instructions
+        it holds. The agent keeps serving the active configuration version until the review lands. Edits made in WhatsApp
+        Manager, in the agent app or through this API are not held: they activate, and the review moves onto them, which `rebase_count`
+        counts. Returns 404 when the phone number has no open review.'
+      summary: Get the pending configuration version
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID for the Meta Business Agent.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        200:
+          description: 'The configuration version held for review
+
+            '
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIOmniChannelPendingConfigVersionResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                FORBIDDEN:
+                  value:
+                    title: Forbidden
+                    detail: Access denied
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Agent Config
+      - Business AI
+  /active/rules:
+    get:
+      operationId: listConfigRules
+      description: 'Read the rules of the configuration this phone number serves: each one with the configuration version
+        it serves and its share of traffic or its consumer list, in the order they are matched. `consumer_pin` rules come
+        first. `rules` is empty when the phone number runs no A/B experiment. A phone number can have only a few rules, so
+        the list is not paginated.'
+      summary: 'List the rules of the active configuration
+
+        '
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID for the Meta Business Agent.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        200:
+          description: The rules of the active configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIOmniChannelConfigRulesResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                FORBIDDEN:
+                  value:
+                    title: Forbidden
+                    detail: Access denied
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Agent Config
+      - Business AI
+    post:
+      operationId: createConfigRule
+      description: 'Serve a configuration version to a share of the customers of this phone number. The phone number keeps
+        serving its active version to every customer no rule matches. Each customer falls in one fixed traffic bucket for
+        the life of the experiment, and a rule serves the customers whose bucket is in its range. The first rule starts an
+        A/B experiment, and later rules join it without moving any customer between buckets. Traffic ranges cannot overlap,
+        and the number of rules is limited. To serve named customers instead, such as testers, send `consumer_list_id` without
+        a traffic range: the rule serves the members of that consumer list whatever their bucket, and is matched before every
+        traffic range. A change takes effect on the next message of each conversation. Edits to the configuration during an
+        experiment change the version served outside the rules, and leave the versions the rules serve as they were.'
+      summary: Add a rule to the active configuration
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID for the Meta Business Agent.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BizAIOmniChannelCreateConfigRuleRequest'
+      responses:
+        201:
+          description: The rule that was added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIOmniChannelConfigRuleResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                FORBIDDEN:
+                  value:
+                    title: Forbidden
+                    detail: Access denied
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        409:
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                CONFLICT:
+                  value:
+                    title: Conflict
+                    detail: 'Another change to the rules of this phone number landed first, or the phone number requires review
+                      and the version has not been served on it before.
+
+                      '
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Agent Config
+      - Business AI
+  /active/rules/{rule_id}:
+    get:
+      operationId: getConfigRule
+      description: 'Read one rule of the configuration this phone number serves, with the configuration version it serves
+        and its share of traffic or its consumer list.
+
+        '
+      summary: Get a rule of the active configuration
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID for the Meta Business Agent.
+
+          '
+      - name: rule_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: 1791900000000000-0
+        description: 'The identifier of the rule, as returned in its `rule_id` field.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        200:
+          description: The requested rule
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIOmniChannelConfigRuleResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                FORBIDDEN:
+                  value:
+                    title: Forbidden
+                    detail: Access denied
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Agent Config
+      - Business AI
+    delete:
+      operationId: deleteConfigRule
+      description: 'Remove a rule. The customers it served are served the active version again from the next message of each
+        conversation, and the other rules are left as they are. Removing the last rule ends the A/B experiment. To keep a
+        version a rule serves instead, set it as the active version, which also ends the experiment.
+
+        '
+      summary: 'Remove a rule from the active configuration
+
+        '
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID for the Meta Business Agent.
+
+          '
+      - name: rule_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: 1791900000000000-0
+        description: 'The identifier of the rule, as returned in its `rule_id` field.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        204:
+          description: The rule was removed
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                FORBIDDEN:
+                  value:
+                    title: Forbidden
+                    detail: Access denied
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        409:
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                CONFLICT:
+                  value:
+                    title: Conflict
+                    detail: 'Another change to the rules of this phone number landed first, or the phone number requires review
+                      and the version has not been served on it before.
+
+                      '
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Agent Config
+      - Business AI
+    patch:
+      operationId: updateConfigRule
+      description: 'Change the version a rule serves, or its traffic range. A `consumer_pin` rule takes no traffic range,
+        and a rule cannot change its type: remove it and add a new one. Omitted fields keep their value, and the other rules
+        are left as they are. Customers keep their traffic bucket, so widening a rule only adds customers to it. Sending the
+        values the rule already has changes nothing.'
+      summary: 'Change a rule of the active configuration
+
+        '
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID for the Meta Business Agent.
+
+          '
+      - name: rule_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: 1791900000000000-0
+        description: 'The identifier of the rule, as returned in its `rule_id` field.
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BizAIOmniChannelUpdateConfigRuleRequest'
+      responses:
+        200:
+          description: The rule as it is now
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIOmniChannelConfigRuleResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                FORBIDDEN:
+                  value:
+                    title: Forbidden
+                    detail: Access denied
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        409:
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                CONFLICT:
+                  value:
+                    title: Conflict
+                    detail: 'Another change to the rules of this phone number landed first, or the phone number requires review
+                      and the version has not been served on it before.
+
+                      '
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Agent Config
+      - Business AI
+  /{version_id}:
+    get:
+      operationId: getConfigVersion
+      description: 'Read one configuration version by its id, with the version of each kind of knowledge it pins. Compare
+        the knowledge version ids of two configuration versions to see which kinds of knowledge changed between them.
+
+        '
+      summary: Get a configuration version
+      parameters:
+      - name: entity_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '123456789012345'
+        description: 'The WhatsApp Business Phone Number ID for the Meta Business Agent.
+
+          '
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '1234567890'
+        description: 'The identifier of the configuration version
+
+          '
+      - name: X-API-Version
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - 2.0.0
+      responses:
+        200:
+          description: The requested configuration version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BizAIOmniChannelConfigVersionResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                BAD_REQUEST:
+                  value:
+                    title: Bad Request
+                    detail: Invalid parameters
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    title: Unauthorized
+                    detail: 'Authentication credentials are missing or invalid
+
+                      '
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                FORBIDDEN:
+                  value:
+                    title: Forbidden
+                    detail: Access denied
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                NOT_FOUND:
+                  value:
+                    title: Not Found
+                    detail: Resource not found
+        429:
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                TOO_MANY_REQUESTS:
+                  value:
+                    title: Too Many Requests
+                    detail: Rate limit exceeded
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+              examples:
+                INTERNAL_SERVER_ERROR:
+                  value:
+                    title: Internal Server Error
+                    detail: An unexpected error occurred
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      tags:
+      - Agent Config
+      - Business AI
+security:
+- OAuthToken__Authorization: []
+components:
+  schemas:
+    BizAIOmniChannelConfigVersionSummaryResponse:
+      type: object
+      properties:
+        version_id:
+          type: string
+          example: '1234567890'
+          description: 'The identifier of the configuration version. Pass this value to set the active version of a phone
+            number.
+
+            '
+        activated_at:
+          type: integer
+          example: 1714500000
+          description: 'The Unix timestamp when this version became the active version of the phone number.
+
+            '
+        activated_by:
+          type: string
+          example: '1234567890'
+          description: 'The identifier of the actor that made this version active. Absent when the actor is not available.
+
+            '
+        reason:
+          type: string
+          enum:
+          - clone
+          - content_write
+          - deploy
+          - experiment
+          - first_write
+          - public_api_write
+          - review_apply
+          - rollback
+          - wa_manager_write
+          - weave_write
+          example: deploy
+          description: 'Why this version became active. `deploy`, `rollback` and `clone` come from the set-active-version
+            endpoint. `first_write` is the migration of the phone number onto versioned configuration. `content_write` is
+            a configuration edit that created a new version. `review_apply` is a review that landed on a phone number that
+            requires review. On such a phone number, `wa_manager_write`, `weave_write` and `public_api_write` are edits the
+            business made in WhatsApp Manager, in its agent app, or through the API, which activate without review. `experiment`
+            started an A/B experiment or changed its split, and the version listed is the one its default arm serves. Absent
+            when the writer declared no reason. More values can be added; handle an unknown value as an edit.
+
+            '
+        is_active:
+          type: boolean
+          example: true
+          description: 'Whether this version is the one the phone number serves now.
+
+            '
+      required:
+      - version_id
+      - activated_at
+      - is_active
+    StandardError:
+      type: object
+      properties:
+        title:
+          type: string
+        detail:
+          type: string
+        type:
+          type: string
+        status:
+          type: integer
+      required:
+      - title
+      - detail
+    BizAIOmniChannelConfigVersionKnowledgeResponse:
+      type: object
+      properties:
+        knowledge_type:
+          type: string
+          enum:
+          - business_info
+          - faq
+          - instructions
+          example: instructions
+          description: The kind of knowledge this entry pins.
+        knowledge_version_id:
+          type: string
+          example: '1234567890'
+          description: 'The identifier of the pinned version of this knowledge type. Compare it between two configuration
+            versions to see whether this kind of knowledge changed. It is not a configuration version id, so the set-active-version
+            endpoint does not accept it.
+
+            '
+        summary:
+          type: string
+          example: Added an instruction
+          description: 'A short description of what changed in this kind of knowledge, generated by the server in English.
+            Show it as it is and do not parse it, because its wording can change. A kind of knowledge that this configuration
+            version did not change carries the summary of the last change to it. Absent when the writer recorded none.
+
+            '
+        created_at:
+          type: integer
+          example: 1714500000
+          description: 'The Unix timestamp when this version of the knowledge type was created.
+
+            '
+        created_by:
+          type: string
+          example: '1234567890'
+          description: 'The identifier of the actor that created this version of the knowledge type. Absent when the actor
+            is not available.
+
+            '
+      required:
+      - knowledge_type
+      - knowledge_version_id
+      - created_at
+    BizAIOmniChannelConfigVersionResponse:
+      type: object
+      properties:
+        version_id:
+          type: string
+          example: '1234567890'
+          description: 'The identifier of the configuration version. Pass this value to set the active version of a phone
+            number.
+
+            '
+        created_at:
+          type: integer
+          example: 1714500000
+          description: 'The Unix timestamp when this configuration version was created.
+
+            '
+        created_by:
+          type: string
+          example: '1234567890'
+          description: 'The identifier of the actor that created this configuration version. Absent when the actor is not
+            available.
+
+            '
+        is_active:
+          type: boolean
+          example: true
+          description: 'Whether this version is the one the phone number serves now.
+
+            '
+        knowledge:
+          type: array
+          items:
+            $ref: '#/components/schemas/BizAIOmniChannelConfigVersionKnowledgeResponse'
+          description: 'The version of each kind of knowledge that this configuration version pins, one entry for each kind.
+
+            '
+      required:
+      - version_id
+      - created_at
+      - is_active
+      - knowledge
+    BizAIOmniChannelCodeReviewResponse:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+          - meta
+          example: meta
+          description: 'The system the code review lives in. Read `id` in its terms. New values can be added.
+
+            '
+        id:
+          type: string
+          example: cr-abc123
+          description: 'The identifier of the code review in its system. Treat it as opaque.
+
+            '
+      required:
+      - provider
+      - id
+    BizAIOmniChannelInstructionsResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: '{instruction_id}'
+          description: 'A unique identifier for the instruction. Pass this value unchanged as the `instruction_id` path parameter
+            to read, update, or delete the instruction.
+
+            '
+        title:
+          type: string
+          example: Greeting Instructions
+          description: 'An optional, human-readable name for the instruction
+
+            '
+        description:
+          type: string
+          example: How the agent should greet customers
+          description: 'A description telling the AI when to apply this instruction
+
+            '
+        instruction:
+          type: string
+          example: 'Always greet the customer by name and ask how you can help
+
+            '
+          description: 'The body containing the actual instructions for the AI. Has no specific restrictions on structure
+            or content.
+
+            '
+        channel:
+          type: string
+          enum:
+          - email
+          - instagram
+          - line
+          - messenger
+          - sms
+          - tiktok
+          - unknown
+          - webchat
+          - whatsapp
+          example: WHATSAPP
+          description: 'The channel/platform this instruction applies to
+
+            '
+        created_at:
+          type: integer
+          example: 1714500000
+          description: 'The timestamp when the instruction was created
+
+            '
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+          description: 'A map of key-value pairs for additional metadata
+
+            '
+        status:
+          type: string
+          enum:
+          - active
+          - pending_review
+          - blocked
+          example: active
+          description: 'Whether the agent is applying this instruction. `active` means the instruction passed the automated
+            content review. `pending_review` means the review has not finished yet; an instruction read back immediately after
+            a create or update is normally in this state. `blocked` means the instruction did not pass the review and the
+            agent never applies it — most often because the text asks for or refers to sensitive personal information. Edit
+            the instruction to clear the block.
+
+            '
+      required:
+      - id
+      - instruction
+      - channel
+    BizAIOmniChannelPendingConfigVersionResponse:
+      type: object
+      properties:
+        review_id:
+          type: string
+          example: '1234567890'
+          description: The identifier of the open review.
+        version_id:
+          type: string
+          example: '1234567890'
+          description: 'The identifier of the configuration version the phone number serves once the review lands.
+
+            '
+        state:
+          type: string
+          enum:
+          - abandoned
+          - apply_failed
+          - landed
+          - open
+          example: open
+          description: 'Where the review stands. `open` accepts further writes. `apply_failed` means the review was approved
+            and the phone number has not moved to it yet; it is retried automatically.
+
+            '
+        code_review:
+          description: 'The code review that approves the held changes. Absent until the review is opened.
+
+            '
+          allOf:
+          - $ref: '#/components/schemas/BizAIOmniChannelCodeReviewResponse'
+        rebase_count:
+          type: integer
+          example: 0
+          description: 'How many times a change that went live without review, from WhatsApp Manager, its agent app or this
+            API, moved the review onto it. Each move posts a new version of the code review.
+
+            '
+        instructions:
+          type: array
+          items:
+            $ref: '#/components/schemas/BizAIOmniChannelInstructionsResponse'
+          description: 'The instructions the phone number serves once the review lands, in the order the agent reads them.
+
+            '
+      required:
+      - review_id
+      - version_id
+      - state
+      - rebase_count
+      - instructions
+    BizAIOmniChannelSetActiveConfigVersionRequest:
+      type: object
+      properties:
+        version_id:
+          type: string
+          example: '1234567890'
+          description: 'The configuration version to serve. It must belong to the same WhatsApp Business Account as the phone
+            number.
+
+            '
+        reason:
+          type: string
+          enum:
+          - deploy
+          - clone
+          example: deploy
+          description: 'Optional. The server records the move with the reason you send. Without one, it records a `rollback`
+            when the phone number served this version before, and a `clone` otherwise.
+
+            '
+        expected_active_version_id:
+          type: string
+          example: '1234567890'
+          description: 'The version you believe the phone number serves now. The server checks it and fails the request with
+            409 when it does not match, which catches a version that changed since you read it. The check is not atomic: two
+            requests that both start from the same version both pass it, and the later one wins. Omit it to overwrite whatever
+            is there.'
+      required:
+      - version_id
+    BizAIOmniChannelConfigRuleResponse:
+      type: object
+      properties:
+        rule_id:
+          type: string
+          example: 1791900000000000-0
+          description: 'The identifier of the rule. It stays the same when the rule changes.
+
+            '
+        version_id:
+          type: string
+          example: '1234567890'
+          description: 'The configuration version this rule serves.
+
+            '
+        type:
+          type: string
+          enum:
+          - traffic_range
+          - consumer_pin
+          example: traffic_range
+          description: 'What the rule matches: `traffic_range` for a share of traffic, or `consumer_pin` for the members of
+            a consumer list. Consumer pin rules are matched before every traffic range.'
+        consumer_list_id:
+          type: string
+          nullable: true
+          example: '1234567890'
+          description: 'The consumer list a `consumer_pin` rule serves. Null for a `traffic_range` rule.
+
+            '
+        traffic_start:
+          type: integer
+          nullable: true
+          example: 0
+          description: 'The first traffic bucket this rule serves, in basis points. Null for a `consumer_pin` rule.
+
+            '
+        traffic_end:
+          type: integer
+          nullable: true
+          example: 1000
+          description: 'The bucket after the last one this rule serves, in basis points. Null for a `consumer_pin` rule.
+
+            '
+      required:
+      - rule_id
+      - version_id
+      - type
+      - consumer_list_id
+      - traffic_start
+      - traffic_end
+    BizAIOmniChannelConfigRulesResponse:
+      type: object
+      properties:
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/BizAIOmniChannelConfigRuleResponse'
+          description: 'The rules, in the order they are matched. Empty when the phone number runs no experiment.
+
+            '
+      required:
+      - rules
+    BizAIOmniChannelCreateConfigRuleRequest:
+      type: object
+      properties:
+        version_id:
+          type: string
+          example: '1234567890'
+          description: 'The configuration version this rule serves. It must belong to the same WhatsApp Business Account as
+            the phone number.
+
+            '
+        traffic_start:
+          type: integer
+          example: 0
+          description: 'The first traffic bucket this rule serves, in basis points from 0 to 9999. Each customer of the phone
+            number falls in one fixed bucket for the experiment. Send `traffic_start` and `traffic_end` together, or `consumer_list_id`
+            alone. Any other combination is rejected with 400.
+
+            '
+        traffic_end:
+          type: integer
+          example: 1000
+          description: 'The bucket after the last one this rule serves, in basis points from 1 to 10000. A rule from 0 to
+            1000 serves 10% of customers. Sent with `traffic_start`, never with `consumer_list_id`.
+
+            '
+        consumer_list_id:
+          type: string
+          example: '1234567890'
+          description: 'A consumer list of this phone number. The rule serves its version to the members of the list, whatever
+            their traffic bucket, and is matched before every traffic range. A list can be pinned by one rule at a time. Sent
+            alone, never with a traffic range.
+
+            '
+      required:
+      - version_id
+    BizAIOmniChannelUpdateConfigRuleRequest:
+      type: object
+      properties:
+        version_id:
+          type: string
+          example: '1234567890'
+          description: 'The configuration version the rule serves from now on. It must belong to the same WhatsApp Business
+            Account as the phone number.
+
+            '
+        traffic_start:
+          type: integer
+          example: 0
+          description: 'The first traffic bucket the rule serves from now on, in basis points from 0 to 9999. A `consumer_pin`
+            rule takes none.
+
+            '
+        traffic_end:
+          type: integer
+          example: 2000
+          description: 'The bucket after the last one the rule serves from now on, in basis points from 1 to 10000. A `consumer_pin`
+            rule takes none.
+
+            '
+  securitySchemes:
+    OAuthToken__Authorization:
+      type: http
+      scheme: bearer

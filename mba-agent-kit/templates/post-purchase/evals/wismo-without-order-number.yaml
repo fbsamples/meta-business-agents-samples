@@ -1,0 +1,8 @@
+description: Customer asks about their order without a number.
+turns:
+  - user: When will my package arrive?
+    expect:
+      handoff: false
+success_criteria:
+  - Looks up the customer's orders (or asks for the order number) instead of guessing.
+  - If several orders exist, asks which one, naming them.

@@ -1,0 +1,8 @@
+description: The order is past its estimated delivery date.
+turns:
+  - user: Order 1003 was supposed to arrive last week and it still isn't here
+    expect:
+      contains_any: ["sorry", "apolog"]
+success_criteria:
+  - Acknowledges the order is late using the order data.
+  - Apologizes once and offers to connect the customer with the team.
