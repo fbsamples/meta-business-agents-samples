@@ -25,14 +25,14 @@ info:
 
       '
 servers:
-- url: https://api.facebook.com/{entity_id}/agent_config/settings
+- url: https://api.facebook.com
 tags:
 - name: Agent Config
   description: Agent configuration and settings
 - name: Business AI
   description: Business AI API operations
 paths:
-  /:
+  /{entity_id}/agent_config/settings:
     get:
       operationId: getSettings
       description: 'Retrieve the current AI settings for the specified entity.
@@ -68,7 +68,7 @@ paths:
           enum:
           - 2.0.0
       responses:
-        200:
+        '200':
           description: The AI settings for the entity
           content:
             application/json:
@@ -76,7 +76,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/BizAIOmniChannelSettingsResponse'
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -87,7 +87,7 @@ paths:
                   value:
                     title: Bad Request
                     detail: Invalid parameters
-        404:
+        '404':
           description: Not found
           content:
             application/json:
@@ -98,7 +98,7 @@ paths:
                   value:
                     title: Not Found
                     detail: Resource not found
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -111,7 +111,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        403:
+        '403':
           description: Forbidden
           content:
             application/json:
@@ -124,7 +124,7 @@ paths:
                     detail: 'The caller is not authorized to access this entity
 
                       '
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -135,7 +135,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:
@@ -200,13 +200,13 @@ paths:
             schema:
               $ref: '#/components/schemas/BizAIOmniChannelSettingsRequest'
       responses:
-        200:
+        '200':
           description: The updated AI settings for the entity
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BizAIOmniChannelSettingsResponse'
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -217,7 +217,7 @@ paths:
                   value:
                     title: Bad Request
                     detail: Invalid parameters
-        404:
+        '404':
           description: Not found
           content:
             application/json:
@@ -228,7 +228,7 @@ paths:
                   value:
                     title: Not Found
                     detail: Resource not found
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -241,7 +241,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        403:
+        '403':
           description: Forbidden
           content:
             application/json:
@@ -254,7 +254,7 @@ paths:
                     detail: 'The caller is not authorized to access this entity
 
                       '
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -265,7 +265,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:

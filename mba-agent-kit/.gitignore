@@ -10,3 +10,5 @@ __pycache__/
 /faqs.yaml
 /skills/
 /evals/
+/.claude/skills/
+# agent-guidance/ contains shipped AI assistant guidance - do NOT add it here

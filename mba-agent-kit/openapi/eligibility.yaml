@@ -15,12 +15,12 @@ info:
 
       '
 servers:
-- url: https://api.facebook.com/{entity_id}/agent_eligibility
+- url: https://api.facebook.com
 tags:
 - name: Business AI
   description: Business AI API operations
 paths:
-  /:
+  /{entity_id}/agent_eligibility:
     get:
       operationId: getAgentEligibility
       description: 'Check whether the business AI agent can be enabled for a specific WhatsApp Business phone number or Instagram
@@ -83,7 +83,7 @@ paths:
           enum:
           - 2.0.0
       responses:
-        200:
+        '200':
           description: 'Response containing the eligibility result for the entity
 
             '
@@ -91,7 +91,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BizAIOmniChannelEligibilityResponse'
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -102,7 +102,7 @@ paths:
                   value:
                     title: Bad Request
                     detail: Invalid parameters
-        404:
+        '404':
           description: Not found
           content:
             application/json:
@@ -113,7 +113,7 @@ paths:
                   value:
                     title: Not Found
                     detail: Resource not found
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -126,7 +126,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -137,7 +137,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:

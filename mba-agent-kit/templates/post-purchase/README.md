@@ -1,8 +1,10 @@
 # Post-purchase support template
 
 For stores whose customers come back after buying: "where is my order", returns and exchanges,
-refund status, and problems that need a person. Adapted from Meta's
-[post-purchase support agent guide](https://developers.facebook.com/documentation/meta-business-agent/usage-guides/post-purchase-support-agent).
+refund status, and problems that need a person. This is an illustrative retail sample, not a
+copy of a published product use case. See the public
+[usage guides](https://developers.facebook.com/documentation/meta-business-agent/usage-guides/post-purchase-support-agent)
+for product guidance, and verify every API contract in the reference before deploying.
 
 ## What you get
 
@@ -25,6 +27,16 @@ customer's WhatsApp number from the platform, never from the model, to scope res
 | `get_order` | `GET /orders/{order_number}?customer_phone=` | items (with `returnable`, `return_by`), status, carrier, tracking, estimated delivery |
 | `create_return` | `POST /orders/{order_number}/returns` `{item_ids, reason, customer_phone}` | return ID, label URL, instructions |
 | `get_refund_status` | `GET /orders/{order_number}/refunds?customer_phone=` | refunds: amount, status, date |
+
+The shared API key authenticates the demo connector; `customer_phone` only scopes its synthetic
+orders. GET identity belongs in the URL-encoded query; return-request identity belongs in the
+JSON body. A production adapter must authenticate the caller and authorize access independently.
+Never put real customer records into this mock or go live with a tunnel URL.
+
+The bundled order owners are synthetic demo identities. The Agent Test API does not let this
+kit choose a consumer phone identity, so do not assume its macro resolves to those demo owners.
+Use direct synthetic requests to validate the mock contract, and use an appropriate test backend
+for agent evaluations.
 
 If your API differs, change the tool `request_definition`s in `agent.yaml`, not the skills.
 
@@ -53,7 +65,7 @@ When your real API is ready, replace `base_url` (and the tool definitions if nee
 
 1. `mba init --template post-purchase`, then replace every `TODO` in `agent.yaml` and `faqs.yaml`.
 2. Set `base_url`: your own API, or the tunnel URL from the section above.
-3. `mba plan`, review, `mba apply --plan-id …`.
+3. `mba plan`, review, `mba apply --plan-id … --yes` after explicit confirmation.
 4. `mba run-tool store_orders_api get_order --input '{"order_number": "1001"}'` to check the connector.
 5. `mba eval` until every scenario passes; read the transcripts against each `success_criteria`.
 6. On your real API, rewrite the evals around real test orders.

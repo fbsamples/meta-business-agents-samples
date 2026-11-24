@@ -8,13 +8,14 @@ A skill is a folder containing a `SKILL.md` file. The agent reads the skill's
 skill adds capability without permanently consuming context. Skills are portable
 across agent harnesses that support the format.
 
-Each directory in this repo is one self-contained, runnable skill.
+The repository contains standalone skills and a larger configuration kit with bundled skills.
 
 ## Skills
 
 | Skill | What it does |
 | --- | --- |
 | [`text-stats`](./text-stats) | Reports word/line/sentence counts and reading time for a text file. A minimal reference for the skill format. |
+| [`mba-agent-kit`](./mba-agent-kit) | Configures and evaluates a Meta Business Agent through a CLI, with requirements and onboarding guidance. |
 
 ## Quick start
 
@@ -51,8 +52,9 @@ script instead of doing the arithmetic itself.
 
 ## Requirements
 
-Python 3.8+ for the bundled scripts. No third-party packages. Any agent that
-supports the `SKILL.md` format can load these.
+`text-stats` requires Python 3.8+ and no third-party packages. The configuration kit
+requires Python 3.9+ and the dependencies listed in its [README](./mba-agent-kit/README.md).
+Its assistant skills live in `mba-agent-kit/agent-guidance/`, not at the kit root.
 
 ## Notes and limitations
 

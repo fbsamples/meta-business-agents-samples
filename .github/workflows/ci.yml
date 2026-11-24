@@ -28,11 +28,59 @@ jobs:
           python3 scripts/text_stats.py README.md --json
           echo "one. two." | python3 scripts/text_stats.py
 
-      - name: Every skill has a SKILL.md with name and description
+      - name: Install the configuration kit from source
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install -e './mba-agent-kit[dev]'
+
+      - name: Run configuration-kit regression tests
+        working-directory: mba-agent-kit
+        env:
+          MBA_REQUIRE_OPENAPI_VALIDATOR: "1"
+        run: ../.venv/bin/python -m unittest discover -s tests -v
+
+      - name: Validate OpenAPI specifications
+        working-directory: mba-agent-kit
+        run: |
+          ../.venv/bin/python - <<'PY'
+          from pathlib import Path
+          import yaml
+          from openapi_spec_validator import validate_spec
+
+          specs = sorted(Path("openapi").glob("*.yaml"))
+          assert len(specs) == 16, "Expected all 16 bundled API specifications"
+          for path in specs:
+              with path.open() as source:
+                  validate_spec(yaml.safe_load(source))
+              print(f"Validated {path.name}")
+          PY
+
+      - name: Smoke-test the editable installation outside the source directory
+        run: |
+          scratch=$(mktemp -d)
+          cd "$scratch"
+          "$GITHUB_WORKSPACE/.venv/bin/mba" schema > agent.schema.json
+          "$GITHUB_WORKSPACE/.venv/bin/mba" init --template post-purchase
+          test -s agent.yaml
+          test -s faqs.yaml
+          test -d evals
+          test -d skills
+
+      - name: Every bundled skill has a SKILL.md with name and description
         run: |
           status=0
           for dir in */; do
-            case "$dir" in .github/|docs/) continue ;; esac
+            case "$dir" in .github/|docs/|mba-agent-kit/) continue ;; esac
+            skill="${dir}SKILL.md"
+            if [ ! -f "$skill" ]; then
+              echo "::error::$dir has no SKILL.md"
+              status=1
+              continue
+            fi
+            grep -q '^name:' "$skill" || { echo "::error::$skill is missing 'name:'"; status=1; }
+            grep -q '^description:' "$skill" || { echo "::error::$skill is missing 'description:'"; status=1; }
+          done
+          for dir in mba-agent-kit/agent-guidance/*/; do
             skill="${dir}SKILL.md"
             if [ ! -f "$skill" ]; then
               echo "::error::$dir has no SKILL.md"

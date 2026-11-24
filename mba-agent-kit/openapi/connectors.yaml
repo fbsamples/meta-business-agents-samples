@@ -19,14 +19,14 @@ info:
 
       '
 servers:
-- url: https://api.facebook.com/{entity_id}/agent_connectors
+- url: https://api.facebook.com
 tags:
 - name: Business AI
   description: Business AI API operations
 - name: Connectors
   description: External API connector management
 paths:
-  /:
+  /{entity_id}/agent_connectors:
     get:
       operationId: listConnectors
       description: 'Retrieve a list of all connectors for the specified entity
@@ -52,7 +52,7 @@ paths:
           enum:
           - 2.0.0
       responses:
-        200:
+        '200':
           description: A list of all connectors
           content:
             application/json:
@@ -60,7 +60,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/BizAIOmniChannelConnectorResponse'
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -71,7 +71,7 @@ paths:
                   value:
                     title: Bad Request
                     detail: Invalid parameters
-        404:
+        '404':
           description: Not found
           content:
             application/json:
@@ -82,7 +82,7 @@ paths:
                   value:
                     title: Not Found
                     detail: Resource not found
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -95,7 +95,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -106,7 +106,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:
@@ -158,13 +158,13 @@ paths:
             schema:
               $ref: '#/components/schemas/BizAIOmniChannelConnectorRequest'
       responses:
-        201:
+        '201':
           description: The newly created connector
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BizAIOmniChannelConnectorResponse'
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -175,7 +175,7 @@ paths:
                   value:
                     title: Bad Request
                     detail: Invalid parameters
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -188,7 +188,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        403:
+        '403':
           description: Forbidden
           content:
             application/json:
@@ -201,7 +201,7 @@ paths:
                     detail: 'The access token does not have permission to manage connectors for this entity
 
                       '
-        409:
+        '409':
           description: Conflict
           content:
             application/json:
@@ -214,7 +214,7 @@ paths:
                     detail: 'A connector with this name already exists for this entity
 
                       '
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -225,7 +225,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:
@@ -245,7 +245,7 @@ paths:
       tags:
       - Business AI
       - Connectors
-  /{connector_id}:
+  /{entity_id}/agent_connectors/{connector_id}:
     get:
       operationId: getConnector
       description: Retrieve a specific connector by its ID
@@ -279,13 +279,13 @@ paths:
           enum:
           - 2.0.0
       responses:
-        200:
+        '200':
           description: The requested connector
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BizAIOmniChannelConnectorResponse'
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -296,7 +296,7 @@ paths:
                   value:
                     title: Bad Request
                     detail: Invalid parameters
-        404:
+        '404':
           description: Not found
           content:
             application/json:
@@ -307,7 +307,7 @@ paths:
                   value:
                     title: Not Found
                     detail: Resource not found
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -320,7 +320,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -331,7 +331,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:
@@ -390,13 +390,13 @@ paths:
             schema:
               $ref: '#/components/schemas/BizAIOmniChannelConnectorRequest'
       responses:
-        200:
+        '200':
           description: The updated connector
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BizAIOmniChannelConnectorResponse'
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -407,7 +407,7 @@ paths:
                   value:
                     title: Bad Request
                     detail: Invalid parameters
-        404:
+        '404':
           description: Not found
           content:
             application/json:
@@ -418,7 +418,7 @@ paths:
                   value:
                     title: Not Found
                     detail: Resource not found
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -431,7 +431,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        403:
+        '403':
           description: Forbidden
           content:
             application/json:
@@ -444,7 +444,7 @@ paths:
                     detail: 'The access token does not have permission to manage connectors for this entity
 
                       '
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -455,7 +455,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:
@@ -508,9 +508,9 @@ paths:
           enum:
           - 2.0.0
       responses:
-        204:
+        '204':
           description: Connector successfully deleted
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -521,7 +521,7 @@ paths:
                   value:
                     title: Bad Request
                     detail: Invalid parameters
-        404:
+        '404':
           description: Not found
           content:
             application/json:
@@ -532,7 +532,7 @@ paths:
                   value:
                     title: Not Found
                     detail: Resource not found
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -545,7 +545,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        403:
+        '403':
           description: Forbidden
           content:
             application/json:
@@ -558,7 +558,7 @@ paths:
                     detail: 'The access token does not have permission to manage connectors for this entity
 
                       '
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -569,7 +569,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:
@@ -589,7 +589,7 @@ paths:
       tags:
       - Business AI
       - Connectors
-  /{connector_id}/upsertCertificate:
+  /{entity_id}/agent_connectors/{connector_id}/upsertCertificate:
     post:
       operationId: upsertConnectorCertificate
       description: 'Upload or rotate the mTLS client certificate for this connector. If a certificate already exists, it will
@@ -632,7 +632,7 @@ paths:
             schema:
               $ref: '#/components/schemas/BizAIOmniChannelConnectorCertificateRequest'
       responses:
-        200:
+        '200':
           description: 'The updated connector with mTLS certificate metadata
 
             '
@@ -640,7 +640,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BizAIOmniChannelConnectorResponse'
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -651,7 +651,7 @@ paths:
                   value:
                     title: Bad Request
                     detail: Invalid parameters
-        404:
+        '404':
           description: Not found
           content:
             application/json:
@@ -662,7 +662,7 @@ paths:
                   value:
                     title: Not Found
                     detail: Resource not found
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -675,7 +675,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        403:
+        '403':
           description: Forbidden
           content:
             application/json:
@@ -688,7 +688,7 @@ paths:
                     detail: 'The access token does not have permission to manage connectors for this entity
 
                       '
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -699,7 +699,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:
@@ -719,7 +719,7 @@ paths:
       tags:
       - Business AI
       - Connectors
-  /{connector_id}/upsertApiKey:
+  /{entity_id}/agent_connectors/{connector_id}/upsertApiKey:
     post:
       operationId: upsertConnectorApiKey
       description: 'Set or rotate the API key credentials for this connector. If credentials already exist, they are replaced
@@ -766,7 +766,7 @@ paths:
             schema:
               $ref: '#/components/schemas/BizAIOmniChannelConnectorUpsertApiKeyRequest'
       responses:
-        200:
+        '200':
           description: 'The updated connector with API key metadata
 
             '
@@ -774,7 +774,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BizAIOmniChannelConnectorResponse'
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -785,7 +785,7 @@ paths:
                   value:
                     title: Bad Request
                     detail: Invalid parameters
-        404:
+        '404':
           description: Not found
           content:
             application/json:
@@ -796,7 +796,7 @@ paths:
                   value:
                     title: Not Found
                     detail: Resource not found
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -809,7 +809,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        403:
+        '403':
           description: Forbidden
           content:
             application/json:
@@ -822,7 +822,7 @@ paths:
                     detail: 'The access token does not have permission to manage connectors for this entity
 
                       '
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -833,7 +833,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:
@@ -853,7 +853,7 @@ paths:
       tags:
       - Business AI
       - Connectors
-  /{connector_id}/upsertOAuth:
+  /{entity_id}/agent_connectors/{connector_id}/upsertOAuth:
     post:
       operationId: upsertConnectorOAuth
       description: 'Set or rotate the OAuth 2.0 client credentials for this connector. If credentials already exist, they
@@ -900,7 +900,7 @@ paths:
             schema:
               $ref: '#/components/schemas/BizAIOmniChannelConnectorUpsertOAuthRequest'
       responses:
-        200:
+        '200':
           description: 'The updated connector with OAuth credential metadata
 
             '
@@ -908,7 +908,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BizAIOmniChannelConnectorResponse'
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -919,7 +919,7 @@ paths:
                   value:
                     title: Bad Request
                     detail: Invalid parameters
-        404:
+        '404':
           description: Not found
           content:
             application/json:
@@ -930,7 +930,7 @@ paths:
                   value:
                     title: Not Found
                     detail: Resource not found
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -943,7 +943,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        403:
+        '403':
           description: Forbidden
           content:
             application/json:
@@ -956,7 +956,7 @@ paths:
                     detail: 'The access token does not have permission to manage connectors for this entity
 
                       '
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -967,7 +967,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:
@@ -987,7 +987,7 @@ paths:
       tags:
       - Business AI
       - Connectors
-  /{connector_id}/refreshMCPTools:
+  /{entity_id}/agent_connectors/{connector_id}/refreshMCPTools:
     post:
       operationId: refreshConnectorMCPTools
       description: 'Discover the remote MCP server tools and reconcile the cached connector actions. The response reports
@@ -1024,7 +1024,7 @@ paths:
           enum:
           - 2.0.0
       responses:
-        200:
+        '200':
           description: 'The connector with updated MCP tool sync metadata
 
             '
@@ -1032,7 +1032,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BizAIOmniChannelConnectorResponse'
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -1043,7 +1043,7 @@ paths:
                   value:
                     title: Bad Request
                     detail: Invalid parameters
-        404:
+        '404':
           description: Not found
           content:
             application/json:
@@ -1054,7 +1054,7 @@ paths:
                   value:
                     title: Not Found
                     detail: Resource not found
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -1067,7 +1067,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        403:
+        '403':
           description: Forbidden
           content:
             application/json:
@@ -1080,7 +1080,7 @@ paths:
                     detail: 'The access token does not have permission to manage connectors for this entity
 
                       '
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -1091,7 +1091,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:
@@ -1111,7 +1111,7 @@ paths:
       tags:
       - Business AI
       - Connectors
-  /{connector_id}/logs:
+  /{entity_id}/agent_connectors/{connector_id}/logs:
     get:
       operationId: getConnectorLogs
       description: Retrieve error logs for the connector. Returns individual log entries by default, or aggregated failure
@@ -1217,7 +1217,7 @@ paths:
           enum:
           - 2.0.0
       responses:
-        200:
+        '200':
           description: 'Log entries or failure patterns, with optional statistics
 
             '
@@ -1225,7 +1225,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BizAIOmniChannelConnectorLogStatsResponse'
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -1236,7 +1236,7 @@ paths:
                   value:
                     title: Bad Request
                     detail: Invalid parameters
-        404:
+        '404':
           description: Not found
           content:
             application/json:
@@ -1247,7 +1247,7 @@ paths:
                   value:
                     title: Not Found
                     detail: Resource not found
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -1260,7 +1260,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -1271,7 +1271,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:

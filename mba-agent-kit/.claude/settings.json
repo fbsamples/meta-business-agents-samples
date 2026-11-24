@@ -27,7 +27,9 @@
     ],
     "deny": [
       "Read(./.env)",
-      "Bash(cat .env:*)"
+      "Read(./.mba/**)",
+      "Bash(cat .env:*)",
+      "Bash(cat .mba/*:*)"
     ]
   }
 }

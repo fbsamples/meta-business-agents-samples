@@ -18,14 +18,14 @@ info:
 
       '
 servers:
-- url: https://api.facebook.com/{entity_id}/agent_config/allowlist
+- url: https://api.facebook.com
 tags:
 - name: Agent Config
   description: Agent configuration and settings
 - name: Business AI
   description: Business AI API operations
 paths:
-  /:
+  /{entity_id}/agent_config/allowlist:
     get:
       operationId: listAllowlist
       description: 'Retrieve all allowlisted consumers for the specified entity
@@ -50,7 +50,7 @@ paths:
           enum:
           - 2.0.0
       responses:
-        200:
+        '200':
           description: A list of all allowlist entries
           content:
             application/json:
@@ -58,7 +58,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/BizAIOmniChannelAllowlistResponseV2'
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -69,7 +69,7 @@ paths:
                   value:
                     title: Invalid request
                     detail: The request is invalid
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -82,7 +82,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        404:
+        '404':
           description: Not found
           content:
             application/json:
@@ -93,7 +93,7 @@ paths:
                   value:
                     title: Not found
                     detail: The requested resource was not found
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -104,7 +104,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:
@@ -158,13 +158,13 @@ paths:
             schema:
               $ref: '#/components/schemas/BizAIOmniChannelAllowlistRequestV2'
       responses:
-        201:
+        '201':
           description: The newly created allowlist entry
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BizAIOmniChannelAllowlistResponseV2'
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -177,7 +177,7 @@ paths:
                     detail: 'The request or consumer identifier is invalid
 
                       '
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -190,7 +190,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        404:
+        '404':
           description: Not found
           content:
             application/json:
@@ -201,7 +201,7 @@ paths:
                   value:
                     title: Not found
                     detail: The requested resource was not found
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -212,7 +212,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:
@@ -232,7 +232,7 @@ paths:
       tags:
       - Agent Config
       - Business AI
-  /{entry_id}:
+  /{entity_id}/agent_config/allowlist/{entry_id}:
     delete:
       operationId: removeFromAllowlist
       description: 'Remove a specific allowlist entry by its ID
@@ -267,9 +267,9 @@ paths:
           enum:
           - 2.0.0
       responses:
-        204:
+        '204':
           description: Allowlist entry successfully deleted
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -280,7 +280,7 @@ paths:
                   value:
                     title: Bad Request
                     detail: Invalid parameters
-        404:
+        '404':
           description: Not found
           content:
             application/json:
@@ -293,7 +293,7 @@ paths:
                     detail: 'The specified allowlist entry was not found
 
                       '
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -306,7 +306,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -317,7 +317,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:

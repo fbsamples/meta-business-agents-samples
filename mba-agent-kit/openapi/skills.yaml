@@ -20,14 +20,14 @@ info:
 
       '
 servers:
-- url: https://api.facebook.com/{entity_id}/agent_config/skills
+- url: https://api.facebook.com
 tags:
 - name: Agent Config
   description: Agent configuration and settings
 - name: Business AI
   description: Business AI API operations
 paths:
-  /:
+  /{entity_id}/agent_config/skills:
     get:
       operationId: listSkills
       description: 'Retrieve every skill configured for the specified entity. The response is the agent''s full behavioral
@@ -67,7 +67,7 @@ paths:
           enum:
           - 2.0.0
       responses:
-        200:
+        '200':
           description: A list of all skills
           content:
             application/json:
@@ -75,7 +75,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/BizAIOmniChannelSkillsResponse'
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -86,7 +86,7 @@ paths:
                   value:
                     title: Bad Request
                     detail: Invalid parameters
-        404:
+        '404':
           description: Not found
           content:
             application/json:
@@ -97,7 +97,7 @@ paths:
                   value:
                     title: Not Found
                     detail: Resource not found
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -110,7 +110,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -121,7 +121,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:
@@ -184,13 +184,13 @@ paths:
             schema:
               $ref: '#/components/schemas/BizAIOmniChannelSkillsRequest'
       responses:
-        201:
+        '201':
           description: The newly created skill
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BizAIOmniChannelSkillsResponse'
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -201,7 +201,7 @@ paths:
                   value:
                     title: Bad Request
                     detail: Invalid parameters
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -214,7 +214,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        409:
+        '409':
           description: Conflict
           content:
             application/json:
@@ -227,7 +227,7 @@ paths:
                     detail: 'Another write changed this configuration at the same time. Nothing was saved. Retry the request.
 
                       '
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -238,7 +238,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:
@@ -258,7 +258,7 @@ paths:
       tags:
       - Agent Config
       - Business AI
-  /{skill_id}:
+  /{entity_id}/agent_config/skills/{skill_id}:
     get:
       operationId: getSkill
       description: 'Retrieve a single skill by its ID, including the conditions under which it applies and the instructions
@@ -296,13 +296,13 @@ paths:
           enum:
           - 2.0.0
       responses:
-        200:
+        '200':
           description: The requested skill
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BizAIOmniChannelSkillsResponse'
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -313,7 +313,7 @@ paths:
                   value:
                     title: Bad Request
                     detail: Invalid parameters
-        404:
+        '404':
           description: Not found
           content:
             application/json:
@@ -324,7 +324,7 @@ paths:
                   value:
                     title: Not Found
                     detail: Resource not found
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -337,7 +337,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -348,7 +348,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:
@@ -412,13 +412,13 @@ paths:
             schema:
               $ref: '#/components/schemas/BizAIOmniChannelSkillsRequest'
       responses:
-        200:
+        '200':
           description: The updated skill
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BizAIOmniChannelSkillsResponse'
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -429,7 +429,7 @@ paths:
                   value:
                     title: Bad Request
                     detail: Invalid parameters
-        404:
+        '404':
           description: Not found
           content:
             application/json:
@@ -440,7 +440,7 @@ paths:
                   value:
                     title: Not Found
                     detail: Resource not found
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -453,7 +453,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        409:
+        '409':
           description: Conflict
           content:
             application/json:
@@ -466,7 +466,7 @@ paths:
                     detail: 'Another write changed this configuration at the same time. Nothing was saved. Retry the request.
 
                       '
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -477,7 +477,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:
@@ -534,9 +534,9 @@ paths:
           enum:
           - 2.0.0
       responses:
-        204:
+        '204':
           description: Skill successfully deleted
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -547,7 +547,7 @@ paths:
                   value:
                     title: Bad Request
                     detail: Invalid parameters
-        404:
+        '404':
           description: Not found
           content:
             application/json:
@@ -558,7 +558,7 @@ paths:
                   value:
                     title: Not Found
                     detail: Resource not found
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -571,7 +571,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        409:
+        '409':
           description: Conflict
           content:
             application/json:
@@ -584,7 +584,7 @@ paths:
                     detail: 'Another write changed this configuration at the same time. Nothing was saved. Retry the request.
 
                       '
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -595,7 +595,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:

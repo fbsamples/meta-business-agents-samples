@@ -7,14 +7,25 @@ name = "mba-agent-kit"
 version = "0.1.0"
 description = "Configure a Meta Business Agent from agent.yaml, with a CLI built for people and coding agents."
 requires-python = ">=3.9"
-dependencies = ["requests>=2.25", "PyYAML>=5.4"]
+dependencies = ["requests>=2.25", "PyYAML>=5.4", "jsonschema>=4"]
 
 [project.optional-dependencies]
 validate = ["jsonschema>=4"]
-dev = ["pytest>=7", "jsonschema>=4"]
+dev = ["pytest>=7", "openapi-spec-validator>=0.7,<0.8"]
+
+[project.urls]
+Repository = "https://github.com/fbsamples/meta-business-agents-samples"
+Documentation = "https://developers.facebook.com/documentation/meta-business-agent/overview"
 
 [project.scripts]
 mba = "mba.cli:main"
 
 [tool.setuptools]
 packages = ["mba"]
+
+# Installation note: schema/, openapi/, and templates/ are loaded at runtime
+# via paths relative to __file__. Only source/editable installs are supported:
+#   pip install -e .
+# A non-editable wheel install will produce FileNotFoundError for
+# `mba schema` and `mba init --template`. Moving these resources into the
+# mba package and switching to importlib.resources is tracked as a future task.

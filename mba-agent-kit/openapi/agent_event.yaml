@@ -17,12 +17,12 @@ info:
 
       '
 servers:
-- url: https://api.facebook.com/{entity_id}/agent_event
+- url: https://api.facebook.com
 tags:
 - name: Business AI
   description: Business AI API operations
 paths:
-  /:
+  /{entity_id}/agent_event:
     post:
       operationId: sendAgentEvent
       description: 'Trigger an agent action asynchronously for a consumer of the specified WhatsApp business phone number
@@ -56,7 +56,7 @@ paths:
             schema:
               $ref: '#/components/schemas/BizAIOmniChannelAgentEventRequestV2'
       responses:
-        200:
+        '200':
           description: 'Acknowledgment that the event was accepted for processing.
 
             '
@@ -64,7 +64,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BizAIOmniChannelAgentEventResponse'
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -75,7 +75,7 @@ paths:
                   value:
                     title: Bad Request
                     detail: Invalid parameters
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -88,7 +88,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        403:
+        '403':
           description: Forbidden
           content:
             application/json:
@@ -101,7 +101,7 @@ paths:
                     detail: 'The agent has reached its configured spend budget
 
                       '
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -112,7 +112,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:
@@ -131,7 +131,7 @@ paths:
                 $ref: '#/components/schemas/StandardError'
       tags:
       - Business AI
-  /{agent_event_id}:
+  /{entity_id}/agent_event/{agent_event_id}:
     get:
       operationId: getAgentEvent
       description: 'Retrieve the current processing status of a previously submitted agent event, identified by its ID.
@@ -162,13 +162,13 @@ paths:
           enum:
           - 2.0.0
       responses:
-        200:
+        '200':
           description: The current status of the agent event.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BizAIOmniChannelAgentEventStatusResponse'
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -179,7 +179,7 @@ paths:
                   value:
                     title: Bad Request
                     detail: Invalid parameters
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -192,7 +192,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        403:
+        '403':
           description: Forbidden
           content:
             application/json:
@@ -205,7 +205,7 @@ paths:
                     detail: 'This endpoint is not enabled for the requested entity
 
                       '
-        404:
+        '404':
           description: Not found
           content:
             application/json:
@@ -216,7 +216,7 @@ paths:
                   value:
                     title: Not Found
                     detail: The agent event could not be found
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -227,7 +227,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:

@@ -14,25 +14,32 @@ from __future__ import annotations
 
 import argparse
 import json
+import shlex
 import shutil
 import sys
 import time
+import traceback
 from pathlib import Path
 from typing import Any, Callable
 
 from . import evals as ev, plan as pl
 from .client import MBAClient
 from .config import (
+    contains_secret,
     credentials,
     dump_yaml,
     load_agent,
     load_dotenv,
     SCHEMA_PATH,
     schema_validation_available,
+    Scrubber,
+    scrubber_for,
+    secret_detector,
 )
 from .errors import (
     ApiError,
     ConfigError,
+    EXIT_ERROR,
     EXIT_NEEDS_HUMAN,
     EXIT_OK,
     GateError,
@@ -44,15 +51,25 @@ TEMPLATES: Path = Path(__file__).resolve().parent.parent / "templates"
 
 
 class Output:
-    def __init__(self, as_json: bool) -> None:
+    """All CLI output goes through here so secrets from .env never print."""
+
+    def __init__(self, as_json: bool, scrub: Scrubber) -> None:
         self.as_json = as_json
+        self.scrub = scrub
 
     def emit(self, data: Any, text: str) -> None:
-        print(json.dumps(data, indent=2, default=str) if self.as_json else text)
+        print(
+            self.scrub(json.dumps(data, indent=2, default=str))
+            if self.as_json
+            else self.scrub(text)
+        )
+
+    def error(self, text: str) -> None:
+        print(self.scrub(text), file=sys.stderr)
 
 
-def _client() -> MBAClient:
-    creds = credentials()
+def _client(args: argparse.Namespace) -> MBAClient:
+    creds = credentials(args.env_values)
     return MBAClient(creds["token"], creds["entity_id"])
 
 
@@ -62,6 +79,40 @@ def _require_yes(args: argparse.Namespace, what: str) -> None:
             f"{what} changes the live agent.",
             "Confirm with the business owner, then re-run with --yes.",
         )
+
+
+def _load(args: argparse.Namespace) -> dict[str, Any]:
+    return load_agent(
+        Path(args.file), args.env_values, credential_files=[Path(args.env)]
+    )
+
+
+def _config_dir(args: argparse.Namespace) -> Path:
+    return Path(args.file).resolve().parent
+
+
+def _evals_dir(args: argparse.Namespace) -> Path:
+    return _config_dir(args) / "evals"
+
+
+def _binding(args: argparse.Namespace, client: MBAClient, create: bool) -> pl.Binding:
+    return pl.Binding(
+        key=pl.approval_key(args.state, create=create),
+        target=client.target,
+        origin=str(Path(args.file).resolve()),
+    )
+
+
+def _gate(args: argparse.Namespace, client: MBAClient) -> Callable[[], dict[str, Any]]:
+    def gate() -> dict[str, Any]:
+        return ev.check_gate(
+            args.state,
+            target=client.target,
+            suite=ev.load_suite(_evals_dir(args))[1],
+            live_digest=lambda: pl.live_digest(client),
+        )
+
+    return gate
 
 
 def cmd_init(args: argparse.Namespace, out: Output) -> int:
@@ -152,7 +203,7 @@ def cmd_doctor(args: argparse.Namespace, out: Output) -> int:
 
     client = None
     try:
-        client = _client()
+        client = _client(args)
         add("credentials", True, f"MBA_ENTITY_ID={client.entity_id}")
     except ConfigError as e:
         add("credentials", False, str(e), e.hint or "")
@@ -160,7 +211,7 @@ def cmd_doctor(args: argparse.Namespace, out: Output) -> int:
     agent_file = Path(args.file)
     if agent_file.exists():
         try:
-            load_agent(agent_file, args.env_keys)
+            _load(args)
             add("agent.yaml", True, "valid")
         except ConfigError as e:
             add("agent.yaml", False, str(e), e.hint or "")
@@ -175,20 +226,22 @@ def cmd_doctor(args: argparse.Namespace, out: Output) -> int:
         add(
             "schema validation",
             False,
-            "skipped: jsonschema is not installed",
-            'pip install -e ".[validate]" to check agent.yaml against the schema.',
-            info=True,
+            "jsonschema is not installed",
+            'pip install -e "." to install the kit with its dependencies.',
         )
 
     if client:
         _doctor_remote(client, add)
-
-    try:
-        run = ev.check_gate()
-        add("go-live gate", True, f"eval run from {time.ctime(run['ran_at'])} passed")
-    except MBAError as e:
-        # Not passing the gate is expected before launch, so it doesn't make the setup unhealthy.
-        add("go-live gate", False, f"not yet: {e}", e.hint or "", info=True)
+        try:
+            run = _gate(args, client)()
+            add(
+                "go-live gate",
+                True,
+                f"eval run from {time.ctime(run['started_at'])} passed",
+            )
+        except MBAError as e:
+            # Not passing the gate is expected before launch, so it doesn't make the setup unhealthy.
+            add("go-live gate", False, f"not yet: {e}", e.hint or "", info=True)
 
     healthy = all(c["ok"] or c["informational"] for c in checks)
     text = "\n".join(
@@ -202,7 +255,7 @@ def cmd_doctor(args: argparse.Namespace, out: Output) -> int:
 
 def cmd_onboard(args: argparse.Namespace, out: Output) -> int:
     _require_yes(args, "Onboarding")
-    res = _client().onboard()
+    res = _client(args).onboard()
     out.emit(
         res,
         f"Onboarded. agent_id={res.get('agent_id')}. Data preparation runs in the "
@@ -217,33 +270,75 @@ def cmd_pull(args: argparse.Namespace, out: Output) -> int:
         raise ConfigError(
             f"{target} exists.", "Pass --force to overwrite, or --out another path."
         )
-    doc = pl.snapshot(_client())
+    doc = pl.snapshot(_client(args))
     header = (
-        "# Exported by `mba pull`. Connector secrets are never exported: add auth_config\n"
+        "# Exported by `mba pull`. Connector auth_config is never exported: add it\n"
         "# to each connector, referencing secrets as ${ENV_VAR} from .env."
     )
-    target.write_text(dump_yaml(doc, header))
+    target.write_text(out.scrub(dump_yaml(doc, header)))
     counts = {k: len(v) for k, v in doc.items() if isinstance(v, list)}
     out.emit({"written": str(target), "counts": counts}, f"Wrote {target}.")
     return EXIT_OK
 
 
+def _apply_command(args: argparse.Namespace, plan: dict[str, Any], live: bool) -> str:
+    parts = ["mba"]
+    if args.file != "agent.yaml":
+        parts += ["--file", shlex.quote(args.file)]
+    if args.env != ".env":
+        parts += ["--env", shlex.quote(args.env)]
+    parts += ["apply", "--plan-id", plan["plan_id"]]
+    if args.prune:
+        parts.append("--prune")
+    for name in sorted(set(args.rotate_credentials)):
+        parts += ["--rotate-credentials", shlex.quote(name)]
+    if live and plan["exposure"]["widening"]:
+        parts.append("--widen-audience")
+    parts.append("--yes")
+    return " ".join(parts)
+
+
 def cmd_plan(args: argparse.Namespace, out: Output) -> int:
-    client = _client()
-    desired = load_agent(Path(args.file), args.env_keys)
-    plan = pl.compute_plan(desired, pl.fetch_remote(client, desired), args.prune)
+    client = _client(args)
+    desired = _load(args)
+    plan = pl.compute_plan(
+        desired,
+        pl.fetch_remote(client, desired),
+        _binding(args, client, create=True),
+        args.prune,
+        args.rotate_credentials,
+    )
     text = pl.render_plan(plan)
     if plan["ops"]:
-        text += f"\n\nTo apply: mba apply --plan-id {plan['plan_id']}"
+        live = pl.is_live(client.get_settings())
+        if live and plan["exposure"]["config"]:
+            text += (
+                "\n\nThe agent is live: disable it before applying configuration "
+                "changes, then eval and enable again."
+            )
+        text += (
+            "\n\nAfter the business owner approves this plan, apply it with:\n  "
+            + _apply_command(args, plan, live)
+        )
     out.emit(pl.redact(plan), text)
     return EXIT_OK
 
 
 def cmd_apply(args: argparse.Namespace, out: Output) -> int:
-    client = _client()
-    desired = load_agent(Path(args.file), args.env_keys)
-    results = pl.apply_plan(client, desired, args.plan_id, args.prune)
-    ev.write_state(last_apply_at=time.time(), last_plan_id=args.plan_id)
+    _require_yes(args, "Applying a plan")
+    client = _client(args)
+    desired = _load(args)
+    results = pl.apply_plan(
+        client,
+        desired,
+        args.plan_id,
+        _binding(args, client, create=False),
+        args.state,
+        prune=args.prune,
+        rotate=args.rotate_credentials,
+        widen_audience=args.widen_audience,
+        gate=_gate(args, client),
+    )
     lines = [f"  {r['action']} {r['kind']} {r['label']}" for r in results]
     out.emit(
         {"applied": results},
@@ -255,7 +350,7 @@ def cmd_apply(args: argparse.Namespace, out: Output) -> int:
 
 
 def cmd_test(args: argparse.Namespace, out: Output) -> int:
-    res = _client().agent_test(args.message, args.conversation_id)
+    res = _client(args).agent_test(args.message, args.conversation_id)
     extra = []
     if res.get("handoff_reason"):
         extra.append(f"[handoff: {res['handoff_reason']}]")
@@ -287,14 +382,31 @@ def _render_eval(run: dict[str, Any], verbose: bool) -> str:
 
 
 def cmd_eval(args: argparse.Namespace, out: Output) -> int:
-    scenarios = ev.load_scenarios(Path(args.dir), args.only)
-    run = ev.run_scenarios(_client(), scenarios, complete=not args.only)
+    canonical = _evals_dir(args)
+    evals_dir = Path(args.dir).resolve() if args.dir else canonical
+    scenarios, suite = ev.load_suite(evals_dir, args.only)
+    if contains_secret(json.dumps(scenarios), secret_detector(args.env_values)):
+        raise ConfigError(
+            f"A scenario in {evals_dir} contains the value of a secret from .env.",
+            "Scenario turns are sent to the Agent Test API; remove the secret.",
+        )
+    client = _client(args)
+    run = ev.run_scenarios(
+        client,
+        scenarios,
+        args.state,
+        complete=not args.only and evals_dir == canonical,
+        suite_dir=evals_dir,
+        suite=suite,
+        config_digest=lambda: pl.live_digest(client),
+        scrub=out.scrub,
+    )
     out.emit(run, _render_eval(run, args.verbose))
     return EXIT_OK if run["passed"] else GateError.exit_code
 
 
 def cmd_eval_remote(args: argparse.Namespace, out: Output) -> int:
-    client = _client()
+    client = _client(args)
     if args.action == "cases":
         res = client.eval_cases()
         text = "\n".join(
@@ -314,7 +426,7 @@ def cmd_eval_remote(args: argparse.Namespace, out: Output) -> int:
 
 
 def cmd_versions(args: argparse.Namespace, out: Output) -> int:
-    res = _client().list_versions(args.limit)
+    res = _client(args).list_versions(args.limit)
     text = "\n".join(
         f"{'*' if v.get('is_active') else ' '} {v['version_id']}  "
         f"{time.ctime(v['activated_at'])}  {v.get('reason', '')}"
@@ -329,10 +441,16 @@ def cmd_versions(args: argparse.Namespace, out: Output) -> int:
 
 def cmd_rollback(args: argparse.Namespace, out: Output) -> int:
     _require_yes(args, "Rollback")
-    client = _client()
+    client = _client(args)
+    if pl.is_live(client.get_settings()):
+        raise GateError(
+            "The agent is live, so a rollback would serve customers an untested "
+            "configuration.",
+            "Run `mba disable --yes`, roll back, run `mba eval`, then `mba enable --yes`.",
+        )
     active = client.active_version().get("version_id")
+    args.state.write(last_config_change_at=time.time())
     res = client.set_active_version(args.version_id, expected_active_version_id=active)
-    ev.write_state(last_apply_at=time.time())
     out.emit(
         res,
         f"Now serving {res.get('version_id')} (was {active}). agent.yaml no longer "
@@ -343,8 +461,19 @@ def cmd_rollback(args: argparse.Namespace, out: Output) -> int:
 
 def cmd_enable(args: argparse.Namespace, out: Output) -> int:
     _require_yes(args, "Enabling the agent")
-    run = ev.check_gate()
-    res = _client().put_settings({"rollout": {"enabled": True}})
+    client = _client(args)
+    settings = client.get_settings()
+    if not settings:
+        raise NeedsHumanError("No agent on this number.", "Run `mba onboard --yes`.")
+    audience = settings[0].get("ai_audience") or pl.DEFAULT_AUDIENCE
+    if audience != pl.NARROW_AUDIENCE and not args.widen_audience:
+        raise NeedsHumanError(
+            f"The agent's audience is {audience}: enabling it answers every customer.",
+            "Enable with ai_audience ALLOWLISTED_ONLY first, or confirm with the "
+            "business owner and re-run with --widen-audience.",
+        )
+    run = _gate(args, client)()
+    res = client.put_settings({"rollout": {"enabled": True}})
     out.emit(
         {"settings": res, "gate_run": run["ran_at"]},
         f"Agent enabled for audience {res.get('ai_audience')}. "
@@ -355,7 +484,7 @@ def cmd_enable(args: argparse.Namespace, out: Output) -> int:
 
 def cmd_disable(args: argparse.Namespace, out: Output) -> int:
     _require_yes(args, "Disabling the agent")
-    res = _client().put_settings({"rollout": {"enabled": False}})
+    res = _client(args).put_settings({"rollout": {"enabled": False}})
     out.emit(res, "Agent disabled. Customers are routed to the business as before.")
     return EXIT_OK
 
@@ -370,19 +499,26 @@ def _find_connector(client: MBAClient, name: str) -> dict[str, Any]:
 
 
 def cmd_run_tool(args: argparse.Namespace, out: Output) -> int:
-    client = _client()
+    client = _client(args)
     conn = _find_connector(client, args.connector)
     tools = client.list_items(f"agent_connectors/{conn['id']}/tools")
     tool = next((t for t in tools if t["name"] == args.tool), None)
     if tool is None:
         raise ConfigError(f"Tool {args.tool!r} not found on {args.connector!r}.")
+    method = (tool.get("request_definition") or {}).get("method")
+    if method != "GET" and not args.yes:
+        raise NeedsHumanError(
+            f"Tool {args.tool!r} uses {method or 'an unknown method'}, so it can "
+            "change data in the business's backend.",
+            "Confirm with the business owner, then re-run with --yes.",
+        )
     res = client.run_tool(conn["id"], tool["id"], args.input)
     out.emit(res, f"status={res.get('status')}\n{res.get('output')}")
     return EXIT_OK
 
 
 def cmd_logs(args: argparse.Namespace, out: Output) -> int:
-    client = _client()
+    client = _client(args)
     conn = _find_connector(client, args.connector)
     res = client.connector_logs(conn["id"], include_stats="true", limit=args.limit)
     st = res.get("stats") or {}
@@ -400,7 +536,7 @@ def cmd_logs(args: argparse.Namespace, out: Output) -> int:
 
 
 def cmd_event(args: argparse.Namespace, out: Output) -> int:
-    client = _client()
+    client = _client(args)
     if args.action == "send":
         _require_yes(args, "Sending an event (it can message a real customer)")
         res = client.send_event(args.to, args.type, args.payload)
@@ -415,6 +551,24 @@ def cmd_event(args: argparse.Namespace, out: Output) -> int:
 def cmd_schema(args: argparse.Namespace, out: Output) -> int:
     print(SCHEMA_PATH.read_text())
     return EXIT_OK
+
+
+def _add_rotate(sp: argparse.ArgumentParser) -> None:
+    sp.add_argument(
+        "--rotate-credentials",
+        action="append",
+        default=[],
+        metavar="CONNECTOR",
+        help="send this connector's auth_config from agent.yaml (agent must be disabled)",
+    )
+
+
+def _add_widen(sp: argparse.ArgumentParser) -> None:
+    sp.add_argument(
+        "--widen-audience",
+        action="store_true",
+        help="confirm a change that makes the agent answer more customers",
+    )
 
 
 def _add_commands(
@@ -443,6 +597,7 @@ def _add_commands(
         action="store_true",
         help="also delete live items missing from agent.yaml",
     )
+    _add_rotate(sp)
     sp = cmd(
         "apply",
         cmd_apply,
@@ -450,6 +605,9 @@ def _add_commands(
     )
     sp.add_argument("--plan-id", required=True)
     sp.add_argument("--prune", action="store_true")
+    _add_rotate(sp)
+    _add_widen(sp)
+    sp.add_argument("--yes", action="store_true")
     sp = cmd(
         "test",
         cmd_test,
@@ -462,7 +620,11 @@ def _add_commands(
         cmd_eval,
         "Run the scenarios in evals/ and record the result for the go-live gate.",
     )
-    sp.add_argument("--dir", default="evals")
+    sp.add_argument(
+        "--dir",
+        help="scenario folder (default: evals/ next to agent.yaml; "
+        "any other folder does not satisfy the gate)",
+    )
     sp.add_argument(
         "--only",
         nargs="+",
@@ -486,8 +648,9 @@ def _add_commands(
     sp = cmd(
         "enable",
         cmd_enable,
-        "Turn the agent on. Requires a passing eval run since the last apply. Write.",
+        "Turn the agent on. Requires a passing eval of the live config. Write.",
     )
+    _add_widen(sp)
     sp.add_argument("--yes", action="store_true")
     sp = cmd("disable", cmd_disable, "Turn the agent off. Write.")
     sp.add_argument("--yes", action="store_true")
@@ -499,6 +662,9 @@ def _add_commands(
     sp.add_argument("connector")
     sp.add_argument("tool")
     sp.add_argument("--input", default="{}", help="JSON arguments for the tool")
+    sp.add_argument(
+        "--yes", action="store_true", help="required for tools that are not GET"
+    )
     sp = cmd("logs", cmd_logs, "Connector call logs and success rate. Read-only.")
     sp.add_argument("connector")
     sp.add_argument("--limit", type=int, default=20)
@@ -540,18 +706,22 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    out = Output(args.json)
-    args.env_keys = load_dotenv(Path(args.env))
+    args.env_values = load_dotenv(Path(args.env))
+    args.state = pl.state_for(Path(args.file))
+    out = Output(args.json, scrubber_for(args.env_values))
     try:
         return args.fn(args, out)
     except MBAError as e:
         if args.json:
             payload = {"error": str(e), "hint": e.hint, "exit_code": e.exit_code}
-            print(json.dumps(payload, indent=2))
+            out.emit(payload, "")
         else:
             hint = f"\nhint: {e.hint}" if e.hint else ""
-            print(f"error: {e}{hint}", file=sys.stderr)
+            out.error(f"error: {e}{hint}")
         return e.exit_code
+    except Exception:  # noqa: BLE001 - last resort so tracebacks are scrubbed too
+        out.error(traceback.format_exc())
+        return EXIT_ERROR
 
 
 if __name__ == "__main__":

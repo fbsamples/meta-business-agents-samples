@@ -16,14 +16,14 @@ info:
 
       '
 servers:
-- url: https://api.facebook.com/{entity_id}/agent-eval
+- url: https://api.facebook.com
 tags:
 - name: Business AI
   description: Business AI API operations
 - name: Insights
   description: Performance insights and evaluation
 paths:
-  /cases:
+  /{entity_id}/agent-eval/cases:
     get:
       operationId: listEvalCases
       description: 'List all evaluation scenario configurations for the given entity.
@@ -48,7 +48,7 @@ paths:
           enum:
           - 2.0.0
       responses:
-        200:
+        '200':
           description: List of eval cases for the entity.
           content:
             application/json:
@@ -62,7 +62,7 @@ paths:
                     description: Array of eval case configurations.
                 required:
                 - eval_cases
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -73,7 +73,7 @@ paths:
                   value:
                     title: Bad Request
                     detail: Invalid parameters
-        404:
+        '404':
           description: Not found
           content:
             application/json:
@@ -84,7 +84,7 @@ paths:
                   value:
                     title: Not Found
                     detail: Resource not found
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -97,7 +97,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        403:
+        '403':
           description: Forbidden
           content:
             application/json:
@@ -110,7 +110,7 @@ paths:
                     detail: 'The caller is not authorized to access this entity
 
                       '
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -121,7 +121,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:
@@ -141,7 +141,7 @@ paths:
       tags:
       - Business AI
       - Insights
-  /summary:
+  /{entity_id}/agent-eval/summary:
     get:
       operationId: getEvalSummary
       description: 'Retrieve aggregated insight reports for agent evaluations by insight IDs.
@@ -177,7 +177,7 @@ paths:
           enum:
           - 2.0.0
       responses:
-        200:
+        '200':
           description: List of insight reports.
           content:
             application/json:
@@ -191,7 +191,7 @@ paths:
                     description: Array of insight report objects.
                 required:
                 - insights
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -204,7 +204,7 @@ paths:
                     detail: 'The summary_ids parameter must contain at least one valid ID
 
                       '
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -217,7 +217,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        403:
+        '403':
           description: Forbidden
           content:
             application/json:
@@ -230,7 +230,7 @@ paths:
                     detail: 'The caller is not authorized to access this entity
 
                       '
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -241,7 +241,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:
@@ -261,7 +261,7 @@ paths:
       tags:
       - Business AI
       - Insights
-  /details:
+  /{entity_id}/agent-eval/details:
     get:
       operationId: getEvalDetails
       description: 'Retrieve per-conversation evaluation results by evaluation IDs.
@@ -297,7 +297,7 @@ paths:
           enum:
           - 2.0.0
       responses:
-        200:
+        '200':
           description: The requested evaluations.
           content:
             application/json:
@@ -311,7 +311,7 @@ paths:
                     description: List of evaluation results.
                 required:
                 - evaluations
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -324,7 +324,7 @@ paths:
                     detail: 'The eval_ids parameter is missing or contains too many IDs
 
                       '
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -337,7 +337,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        403:
+        '403':
           description: Forbidden
           content:
             application/json:
@@ -350,7 +350,7 @@ paths:
                     detail: 'The caller is not authorized to access this entity
 
                       '
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -361,7 +361,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:
@@ -381,7 +381,7 @@ paths:
       tags:
       - Business AI
       - Insights
-  /run:
+  /{entity_id}/agent-eval/run:
     get:
       operationId: getEvalRunStatus
       description: 'Poll the status and results of a previously submitted evaluation job.
@@ -417,7 +417,7 @@ paths:
           enum:
           - 2.0.0
       responses:
-        200:
+        '200':
           description: 'Current job status and results (if completed).
 
             '
@@ -425,7 +425,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BizAIComboJobStatusResponse'
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -436,7 +436,7 @@ paths:
                   value:
                     title: Bad Request
                     detail: Invalid parameters
-        404:
+        '404':
           description: Not found
           content:
             application/json:
@@ -449,7 +449,7 @@ paths:
                     detail: 'The requested evaluation job was not found
 
                       '
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -462,7 +462,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        403:
+        '403':
           description: Forbidden
           content:
             application/json:
@@ -475,7 +475,7 @@ paths:
                     detail: 'The caller is not authorized to access this entity
 
                       '
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -486,7 +486,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:
@@ -548,7 +548,7 @@ paths:
             schema:
               $ref: '#/components/schemas/BizAIComboRunRequest'
       responses:
-        200:
+        '200':
           description: 'Acknowledgment that the job was accepted for processing.
 
             '
@@ -556,7 +556,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BizAIComboRunResponse'
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -569,7 +569,7 @@ paths:
                     detail: 'The request is invalid or missing required fields
 
                       '
-        404:
+        '404':
           description: Not found
           content:
             application/json:
@@ -580,7 +580,7 @@ paths:
                   value:
                     title: Not found
                     detail: The requested resource was not found
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -593,7 +593,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        403:
+        '403':
           description: Forbidden
           content:
             application/json:
@@ -606,7 +606,7 @@ paths:
                     detail: 'The caller is not authorized to access this entity
 
                       '
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -617,7 +617,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:

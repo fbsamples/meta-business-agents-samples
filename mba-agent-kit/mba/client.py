@@ -48,6 +48,11 @@ class MBAClient:
     def entity_id(self) -> str:
         return self._entity_id
 
+    @property
+    def target(self) -> str:
+        """The API base and entity every request goes to."""
+        return self._base
+
     def request(
         self,
         method: str,
@@ -113,6 +118,20 @@ class MBAClient:
             "POST",
             f"agent_connectors/{connector_id}/tools/{tool_id}/run",
             body={"input": tool_input},
+        )
+
+    def upsert_api_key(self, connector_id: str, api_key_config: dict[str, Any]) -> Any:
+        return self.request(
+            "POST",
+            f"agent_connectors/{connector_id}/upsertApiKey",
+            body={"api_key_config": api_key_config},
+        )
+
+    def upsert_oauth(self, connector_id: str, oauth_config: dict[str, Any]) -> Any:
+        return self.request(
+            "POST",
+            f"agent_connectors/{connector_id}/upsertOAuth",
+            body={"oauth_config": oauth_config},
         )
 
     # Testing and evals

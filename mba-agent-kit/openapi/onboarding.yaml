@@ -17,12 +17,12 @@ info:
 
       '
 servers:
-- url: https://api.facebook.com/{entity_id}/agent_onboarding
+- url: https://api.facebook.com
 tags:
 - name: Business AI
   description: Business AI API operations
 paths:
-  /:
+  /{entity_id}/agent_onboarding:
     post:
       operationId: createOnboardingSession
       description: 'Trigger AI agent onboarding for the specified entity. Creates the necessary entities and schedules async
@@ -57,13 +57,13 @@ paths:
               allOf:
               - $ref: '#/components/schemas/BizAIOmniChannelOnboardingRequest'
       responses:
-        201:
+        '201':
           description: Onboarding triggered successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BizAIOmniChannelOnboardingResponse'
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
@@ -74,7 +74,7 @@ paths:
                   value:
                     title: Bad Request
                     detail: Invalid parameters
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
@@ -87,7 +87,7 @@ paths:
                     detail: 'Authentication credentials are missing or invalid
 
                       '
-        403:
+        '403':
           description: Forbidden
           content:
             application/json:
@@ -100,7 +100,7 @@ paths:
                     detail: 'The caller is not authorized to perform this action
 
                       '
-        429:
+        '429':
           description: Too many requests
           content:
             application/json:
@@ -111,7 +111,7 @@ paths:
                   value:
                     title: Too Many Requests
                     detail: Rate limit exceeded
-        500:
+        '500':
           description: Server error
           content:
             application/json:

@@ -114,7 +114,7 @@
           "description": { "type": "string" },
           "base_url": { "type": "string", "pattern": "^https://" },
           "connector_protocol": { "enum": ["HTTP", "MCP"] },
-          "auth_type": { "enum": ["OAUTH2", "OAUTH2_CLIENT_CREDENTIALS", "API_KEY", "BASIC", "CUSTOM", "NONE"] },
+          "auth_type": { "enum": ["OAUTH2_CLIENT_CREDENTIALS", "API_KEY", "NONE"] },
           "auth_config": { "type": "object", "description": "Use ${ENV_VAR} for every secret value." },
           "user_auth_injection_config": { "type": "object" },
           "requires_certificate": { "type": "boolean" },
