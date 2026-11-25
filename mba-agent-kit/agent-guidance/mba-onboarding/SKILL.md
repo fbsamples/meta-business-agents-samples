@@ -152,7 +152,34 @@ failures. Gated evaluation and launch are currently supported only for unversion
 versioned targets are refused because public API responses do not verify experiment coverage.
 Do not substitute a one-off test or an undocumented endpoint to bypass this limitation.
 
-### 6. Go live behind an allowlist
+### 6. Verify Conversation Routing (read-only)
+
+Routing determines which app receives customer messages. The agent will not receive messages
+unless routing is configured in Meta Business Suite. Routing is changed only by the client's
+admin — not through the MBA API or this kit.
+
+Read `references/conversation-routing.md`.
+
+**Before `mba enable --yes` (Stage 7):**
+
+1. The routing table is agreed and the client's admin has set it in Meta Business Suite.
+2. Every standby app subscribes to the `standby` webhook field; the escalation partner subscribes
+   to `messaging_handovers`.
+3. Every active phone number on the WhatsApp Business Account is eligible for the agent.
+4. If the number is shared with a live app (flagged in triage Q3), confirm webhook setup per
+   `references/thread-control.md` is complete.
+
+**After enabling, before widening to `EVERYONE` (Stage 7 step 5):**
+
+5. A live handoff test passes from an allowlisted number: the escalation partner sees
+   `control_passed`, a person's reply is delivered, and the agent stays silent for three or more
+   subsequent messages.
+6. Confirm the agent does not reply to a number not on the allowlist.
+
+An allowlisted pilot is not a substitute for routing verification — complete the pre-enable checks
+before Stage 7 regardless of pilot scope.
+
+### 7. Go live behind an allowlist
 
 Order matters. The wrong order exposes a half-built agent to real customers.
 
@@ -170,7 +197,7 @@ consequence write in this kit — treat it like a deployment.
 
 Read `references/onboard.md` for the full go-live sequence.
 
-### 7. Operate
+### 8. Operate
 
 Iterate on live behaviour, roll back bad changes, send business events, and diagnose failures.
 
@@ -180,7 +207,7 @@ Read `references/operate.md` for rollback, business events, connector logs, and 
 
 If `mba-start` flagged an existing app (a helpdesk, CRM, or live chat platform), thread control
 is needed before the agent goes live. Read `references/thread-control.md` — webhook setup must
-happen before stage 6.
+happen before stage 7.
 
 ## When something is wrong
 
@@ -205,11 +232,12 @@ Troubleshooting lives next to the thing that broke, in each reference. Two excep
 | `references/api-contract.md` | Before the first call of a session. Auth, errors, the write pattern, secrets. |
 | `references/setup.md` | Before the engagement starts. Access model, getting a token, what to ask the account owner for. |
 | `references/preflight.md` | Stage 1, and again first whenever something has stopped working. |
-| `references/onboard.md` | Stages 3 and 6. Onboarding, settings, the allowlist, going live. |
+| `references/onboard.md` | Stages 3 and 7. Onboarding, settings, the allowlist, going live. |
 | `references/knowledge.md` | Stage 4. Business info, FAQs, files, websites. |
 | `references/agent-skills.md` | Stage 4. Skill authoring, size limits, PRD-derived testing. |
 | `references/connectors.md` | Stage 4. Connectors, tools, mock backend, credentials, diagnosis. |
 | `references/testing.md` | Stage 5, and throughout. Eval scenarios, go-live gate, server-side evals. |
-| `references/operate.md` | Stage 7. Rollback, business events, enable/disable, connector logs. |
+| `references/conversation-routing.md` | Stage 6. Routing table, pre-go-live routing checks, rollback. |
+| `references/operate.md` | Stage 8. Rollback, business events, enable/disable, connector logs. |
 | `references/thread-control.md` | When an existing app shares the number. Webhook setup, standby, take/release/pass. |
 | `references/escalation.md` | When a failure cannot be fixed from outside. What to send and where. |
